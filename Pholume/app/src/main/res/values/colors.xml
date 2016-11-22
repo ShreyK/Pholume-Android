@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FFF</color>
+    <color name="colorPrimaryDark">#AAA</color>
+    <color name="colorAccent">#FC5239</color>
+    <color name="colorAccentTranslucent">#cdfc5239</color>
+    <color name="white">#FFF</color>
+    <color name="black">#000</color>
+    <color name="grey">#555</color>
+    <color name="light_grey">#bdbdbd</color>
+    <color name="even_lighter_grey">#eeeeee</color>
+</resources>
