@@ -11,7 +11,6 @@ import android.pholume.com.pholume.Model.User;
 import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.databinding.CardPholumeFeedBinding;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -31,6 +29,7 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
     private PholumeBinder binder;
     private Drawable volumeOff;
     private Drawable volumeOn;
+    private FeedFragment fragment;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -44,8 +43,9 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
         }
     }
 
-    FeedListAdapter(Context context, List<FeedItem> list) {
+    FeedListAdapter(Context context, FeedFragment fragment, List<FeedItem> list) {
         super(context, list);
+        this.fragment = fragment;
         binder = new PholumeBinder(context);
         volumeOff = context.getDrawable(R.drawable.ic_volume_off);
         volumeOn = context.getDrawable(R.drawable.ic_volume_on);
@@ -87,13 +87,8 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
         binding.pholumeImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    FeedFragment.playAudio(Constants.BASE_AUDIO + pholume.audioUrl);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Snackbar.make(view, "Couldnt find Pholume audio :(", Snackbar.LENGTH_SHORT)
-                            .show();
-                }
+                String audioUrl = Constants.BASE_AUDIO + pholume.audioUrl;
+                fragment.playAudio(audioUrl);
             }
         });
     }
