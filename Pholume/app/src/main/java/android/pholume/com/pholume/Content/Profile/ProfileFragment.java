@@ -44,192 +44,59 @@ public class ProfileFragment extends Fragment {
 
     private int GALLERY_REQUEST_CODE = 100;
 
-    private @ColorRes int BUTTON_COLOR_R = R.color.even_lighter_grey;
-    private @ColorRes int BUTTON_FONT_COLOR_R = R.color.black;
+    private
+    @ColorRes
+    int BUTTON_COLOR_R = R.color.even_lighter_grey;
+    private
+    @ColorRes
+    int BUTTON_FONT_COLOR_R = R.color.black;
 
     ProfileListAdapter adapter;
     ArrayList<Pholume> pholumeList;
 
+    private Activity activity;
     private User currentUser;
     private User user;
     private FragmentProfileBinding binding;
     private RecyclerView recyclerView;
-    private PholumeCallback followCallback;
     private View.OnClickListener buttonListener;
+    private View.OnClickListener followListener;
+    private View.OnClickListener logoutListener;
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        bindUser();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
+        activity = getActivity();
+        pholumeList = new ArrayList<>();
+        currentUser = PrefManager.getInstance().getCurrentUser();
+        adapter = new ProfileListAdapter(getActivity(), pholumeList);
+        recyclerView = (RecyclerView) binding.getRoot().findViewById(R.id.recycler_view);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
         binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 fetchUserPholumes();
             }
         });
-        currentUser = PrefManager.getInstance().getCurrentUser();
 
-        if(getActivity() instanceof  HomeActivity){
+        if (activity instanceof HomeActivity) {
             user = PrefManager.getInstance().getCurrentUser();
         } else {
             Bundle bundle = getArguments();
             if (bundle != null) {
                 user = bundle.getParcelable("user");
-            } else {
-                user = currentUser;
             }
         }
-        followCallback = new PholumeCallback<User>("FOLLOW") {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                super.onResponse(call, response);
-                if (response.isSuccessful()) {
-                    user = response.body();
-                    fetchUser();
-                    bindUser();
-                }
-            }
-        };
-
-        bindUser();
-        bindPholumes();
-        fetchUser();
+        setupListeners();
         fetchUserPholumes();
         return binding.getRoot();
-    }
-
-    private void bindPholumes(){
-        pholumeList = new ArrayList<>();
-        adapter = new ProfileListAdapter(getActivity(), pholumeList);
-        recyclerView = (RecyclerView) binding.getRoot().findViewById(R.id.recycler_view);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-    }
-
-    private void fetchUserPholumes() {
-        if (user == null) return;
-        RestManager.getInstance().getPholumes(user.id, new PholumeCallback<List<Pholume>>("GetPholumes") {
-            @Override
-            public void onResponse(Call<List<Pholume>> call, Response<List<Pholume>> response) {
-                super.onResponse(call, response);
-                binding.swipeRefreshLayout.setRefreshing(false);
-                if (response.isSuccessful()) {
-                    bindData(response.body());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Pholume>> call, Throwable t) {
-                super.onFailure(call, t);
-                binding.swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-    }
-
-    private void fetchUser(){
-        String userTypeCallback;
-        PholumeCallback getUser = new PholumeCallback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                super.onResponse(call, response);
-                if (response.isSuccessful()) {
-                    user = response.body();
-                    bindUser();
-                }
-            }
-        };
-        if(getActivity() instanceof HomeActivity){
-            getUser.setString("Current User");
-            RestManager.getInstance().getCurrentUser(getUser);
-        } else {
-            getUser.setString("User");
-            RestManager.getInstance().getUser(user.id, getUser);
-        }
-    }
-
-    private void bindUser(){
-        String buttonText;
-        if (getActivity() instanceof HomeActivity) {
-            buttonText = "Logout";
-            buttonListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    RestManager.getInstance().logout();
-                    PrefManager.getInstance().logoutAndClearUserCookies();
-                    startActivity(new Intent(getActivity(), LoginActivity.class));
-                    getActivity().finish();
-                }
-            };
-
-            binding.profileImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    editProfileImage();
-                }
-            });
-        } else {
-            if (currentUser.isFollowing(user.id)) {
-                buttonText = "Following";
-                buttonListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {;
-                        RestManager.getInstance().postFollow(user.id, followCallback);
-                    }
-                };
-                BUTTON_COLOR_R = R.color.even_lighter_grey;
-                BUTTON_FONT_COLOR_R = R.color.black;
-            } else {
-                buttonText = "Follow";
-                buttonListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        RestManager.getInstance().postFollow(user.id, followCallback);
-                    }
-                };
-                BUTTON_COLOR_R = R.color.colorAccent;
-                BUTTON_FONT_COLOR_R = R.color.white;
-            }
-        }
-        binding.profileName.setText(user.username);
-        binding.followersValue.setText(user.getNumOfFollowers());
-        binding.followingValue.setText(user.getNumOfFollowing());
-
-        if (user.avatar != null && !user.avatar.isEmpty()) updateAvatar(user);
-
-        binding.profileButton.setText(buttonText);
-        binding.profileButton.setBackgroundResource(BUTTON_COLOR_R);
-        binding.profileButton.setTextColor(getResources().getColor(BUTTON_FONT_COLOR_R));
-        binding.profileButton.setOnClickListener(buttonListener);
-
-        binding.followersContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), CommonListActivity.class);
-                intent.putExtra(CommonListActivity.TYPE_EXTRA, CommonListActivity.FOLLOWERS);
-                intent.putExtra(CommonListActivity.USER_EXTRA, user);
-                startActivity(intent);
-            }
-        });
-        binding.followingContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), CommonListActivity.class);
-                intent.putExtra(CommonListActivity.TYPE_EXTRA, CommonListActivity.FOLLOWING);
-                intent.putExtra(CommonListActivity.USER_EXTRA, user);
-                startActivity(intent);
-            }
-        });
-    }
-
-    private void editProfileImage() {
-        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
-        galleryIntent.setType("image/*");
-        galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
-
-
-        Intent chooser = new Intent(Intent.ACTION_CHOOSER);
-        chooser.putExtra(Intent.EXTRA_INTENT, galleryIntent);
-        chooser.putExtra(Intent.EXTRA_TITLE, "title");
-        startActivityForResult(chooser, GALLERY_REQUEST_CODE);
     }
 
     @Override
@@ -252,7 +119,7 @@ public class ProfileFragment extends Fragment {
                 public void onResponse(Call<User> call, Response<User> response) {
                     super.onResponse(call, response);
                     if (response.isSuccessful()) {
-                        updateAvatar(response.body());
+                        bindAvatar(response.body());
                     } else {
                         Log.e("UploadAvatar", response.message());
                     }
@@ -267,10 +134,147 @@ public class ProfileFragment extends Fragment {
 
             super.onActivityResult(requestCode, resultCode, data);
         }
-
     }
 
-    private void updateAvatar(User user) {
+    private void setupListeners() {
+        binding.profileImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editProfileImage();
+            }
+        });
+        binding.followersContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), CommonListActivity.class);
+                intent.putExtra(CommonListActivity.TYPE_EXTRA, CommonListActivity.FOLLOWERS);
+                intent.putExtra(CommonListActivity.USER_EXTRA, user);
+                startActivity(intent);
+            }
+        });
+        binding.followingContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), CommonListActivity.class);
+                intent.putExtra(CommonListActivity.TYPE_EXTRA, CommonListActivity.FOLLOWING);
+                intent.putExtra(CommonListActivity.USER_EXTRA, user);
+                startActivity(intent);
+            }
+        });
+        logoutListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RestManager.getInstance().logout();
+                PrefManager.getInstance().logoutAndClearUserCookies();
+                startActivity(new Intent(getActivity(), LoginActivity.class));
+                getActivity().finish();
+            }
+        };
+        followListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RestManager.getInstance().postFollow(user.id, new PholumeCallback<User>("FOLLOW") {
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        super.onResponse(call, response);
+                        if (response.isSuccessful()) {
+                            user = response.body();
+                            if (user.followers.contains(currentUser.id)) {
+                                currentUser.following.add(user.id);
+                            } else {
+                                currentUser.following.remove(user.id);
+                            }
+                            PrefManager.getInstance().saveCurrentUser(currentUser);
+                            bindUser();
+                        }
+                    }
+                });
+            }
+        };
+    }
+
+    private void fetchUserPholumes() {
+        if (user == null) return;
+        RestManager.getInstance().getPholumes(user.id, new PholumeCallback<List<Pholume>>("GetPholumes") {
+            @Override
+            public void onResponse(Call<List<Pholume>> call, Response<List<Pholume>> response) {
+                super.onResponse(call, response);
+                binding.swipeRefreshLayout.setRefreshing(false);
+                if (response.isSuccessful()) {
+                    bindData(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Pholume>> call, Throwable t) {
+                super.onFailure(call, t);
+                binding.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void fetchUser() {
+        PholumeCallback getUser = new PholumeCallback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                super.onResponse(call, response);
+                if (response.isSuccessful()) {
+                    user = response.body();
+                    if (user.id.equals(currentUser.id)) {
+                        currentUser = user;
+                    }
+                    bindUser();
+                }
+            }
+        };
+        if (getActivity() instanceof HomeActivity) {
+            getUser.setString("Current User");
+            RestManager.getInstance().getCurrentUser(getUser);
+        } else {
+            getUser.setString("User");
+            RestManager.getInstance().getUser(user.id, getUser);
+        }
+    }
+
+    private void bindUser() {
+        String buttonText;
+        if (getActivity() instanceof HomeActivity) {
+            buttonText = "Logout";
+            buttonListener = logoutListener;
+            binding.profileImage.setClickable(true);
+        } else {
+            binding.profileImage.setClickable(true);
+            if (currentUser.isFollowing(user.id)) {
+                buttonText = "Following";
+                buttonListener = followListener;
+                BUTTON_COLOR_R = R.color.even_lighter_grey;
+                BUTTON_FONT_COLOR_R = R.color.black;
+            } else {
+                buttonText = "Follow";
+                buttonListener = followListener;
+                BUTTON_COLOR_R = R.color.colorAccent;
+                BUTTON_FONT_COLOR_R = R.color.white;
+            }
+        }
+        binding.profileName.setText(user.username);
+        binding.followersValue.setText(user.getNumOfFollowers());
+        binding.followingValue.setText(user.getNumOfFollowing());
+
+        if (user.avatar != null && !user.avatar.isEmpty()) bindAvatar(user);
+
+        binding.profileButton.setText(buttonText);
+        binding.profileButton.setBackgroundResource(BUTTON_COLOR_R);
+        binding.profileButton.setTextColor(getResources().getColor(BUTTON_FONT_COLOR_R));
+        binding.profileButton.setOnClickListener(buttonListener);
+    }
+
+    private void bindData(List<Pholume> pholumes) {
+        pholumeList = (ArrayList<Pholume>) pholumes;
+        adapter.setData(pholumeList);
+        adapter.notifyDataSetChanged();
+    }
+
+    private void bindAvatar(User user) {
         if (PrefManager.getInstance().getCurrentUser().id.equals(user.id)) {
             PrefManager.getInstance().saveCurrentUser(user);
         }
@@ -279,6 +283,17 @@ public class ProfileFragment extends Fragment {
                 .load(url)
                 .fit().centerCrop().transform(new CircleTransform())
                 .into(binding.profileImage);
+    }
+
+    private void editProfileImage() {
+        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
+        galleryIntent.setType("image/*");
+        galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        Intent chooser = new Intent(Intent.ACTION_CHOOSER);
+        chooser.putExtra(Intent.EXTRA_INTENT, galleryIntent);
+        chooser.putExtra(Intent.EXTRA_TITLE, "title");
+        startActivityForResult(chooser, GALLERY_REQUEST_CODE);
     }
 
     private byte[] getBytes(InputStream inputStream) {
@@ -295,11 +310,5 @@ public class ProfileFragment extends Fragment {
             e.printStackTrace();
         }
         return byteBuffer.toByteArray();
-    }
-
-    private void bindData(List<Pholume> pholumes) {
-        pholumeList = (ArrayList<Pholume>) pholumes;
-        adapter.setData(pholumeList);
-        adapter.notifyDataSetChanged();
     }
 }

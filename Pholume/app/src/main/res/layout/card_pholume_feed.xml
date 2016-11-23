@@ -27,11 +27,11 @@
                     android:id="@+id/pholume_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="8dp"
                     android:layout_centerHorizontal="true"
-                    android:textSize="20sp"
+                    android:paddingTop="8dp"
+                    android:text="Cream"
                     android:textColor="@color/black"
-                    android:text="Cream" />
+                    android:textSize="20sp" />
 
                 <TextView
                     android:id="@+id/pholume_user"
@@ -40,8 +40,8 @@
                     android:layout_below="@id/pholume_title"
                     android:layout_centerHorizontal="true"
                     android:layout_marginBottom="8dp"
-                    android:textSize="14sp"
-                    android:text="\@hichamoaj" />
+                    android:text="\@hichamoaj"
+                    android:textSize="14sp" />
 
                 <ImageView
                     android:id="@+id/user_image"
@@ -66,10 +66,10 @@
                     android:id="@+id/volume_image"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_alignParentTop="true"
                     android:layout_alignParentEnd="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="16dp"
                     android:src="@drawable/ic_volume_off" />
             </RelativeLayout>
 
@@ -77,8 +77,10 @@
                 android:id="@+id/pholume_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingEnd="4dp"
-                android:paddingStart="16dp">
+                android:paddingBottom="6dp"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingTop="6dp">
 
                 <TextView
                     android:id="@+id/pholume_time"
@@ -88,27 +90,26 @@
                     android:gravity="center"
                     tools:text="2 mins ago" />
 
-                <Button
+                <TextView
                     android:id="@+id/like_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
+                    android:gravity="center_vertical"
+                    android:layout_marginEnd="12dp"
                     android:layout_toStartOf="@+id/comment_button"
-                    android:backgroundTint="@color/colorAccent"
-                    android:drawableStart="@drawable/ic_heart"
-                    android:textColor="@color/white"
-                    tools:text="1" />
+                    android:drawablePadding="6dp"
+                    android:drawableStart="@drawable/ic_heart" />
 
-                <Button
+                <TextView
                     android:id="@+id/comment_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:backgroundTint="@color/black"
+                    android:drawablePadding="6dp"
                     android:drawableStart="@drawable/ic_comment"
-                    android:textColor="@color/white"
-                    tools:text="3" />
+                    android:gravity="center_vertical" />
             </RelativeLayout>
 
         </LinearLayout>
