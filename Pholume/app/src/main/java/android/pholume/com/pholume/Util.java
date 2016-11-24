@@ -3,17 +3,20 @@ package android.pholume.com.pholume;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.os.Environment;
 import android.webkit.MimeTypeMap;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class Util {
-
-    /** Check if this device has a camera */
+    /**
+     * Check if this device has a camera
+     */
     public static boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
             // this device has a camera
             return true;
         } else {
@@ -22,7 +25,7 @@ public class Util {
         }
     }
 
-    public static boolean getAudioFocus(Context context, AudioManager.OnAudioFocusChangeListener listener){
+    public static boolean getAudioFocus(Context context, AudioManager.OnAudioFocusChangeListener listener) {
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         int result = audioManager.requestAudioFocus(listener, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN);
@@ -43,7 +46,7 @@ public class Util {
     }
 
     public static String getTimeSince(Date dateCreated, Context context) {
-        long duration  = Calendar.getInstance().getTimeInMillis() - dateCreated.getTime();
+        long duration = Calendar.getInstance().getTimeInMillis() - dateCreated.getTime();
 
         int diffInSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(duration);
         int diffInMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(duration);
@@ -69,5 +72,36 @@ public class Util {
                 }
             }
         }
+    }
+
+    public static String getRootImageDir() {
+        // Get the directory for the user's public pictures directory.
+        return Environment.getExternalStorageDirectory()
+                + File.separator + Constants.PUBLIC_IMAGE_FOLDER + File.separator;
+    }
+
+    public static String getRootAudioDir() {
+        // Get the directory for the user's public pictures directory.
+        return Environment.getExternalStorageDirectory()
+                + File.separator + Constants.PUBLIC_IMAGE_FOLDER+ File.separator;
+    }
+
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 }

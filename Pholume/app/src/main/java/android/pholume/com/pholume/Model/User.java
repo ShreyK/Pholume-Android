@@ -9,29 +9,35 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class User implements Parcelable {
+
     @SerializedName("_id")
     public String id;
+
     @SerializedName("email")
     public String email;
+
     @SerializedName("username")
     public String username;
+
     @SerializedName("following")
     public HashSet<String> following;
+
     @SerializedName("followers")
     public HashSet<String> followers;
+
     @SerializedName("avatar")
     public String avatar;
 
-    User(Parcel parcel) {
+    private User(Parcel parcel) {
         Bundle bundle = parcel.readBundle(getClass().getClassLoader());
         this.id = bundle.getString("id");
         this.email = bundle.getString("email");
         this.username = bundle.getString("username");
         this.following = new HashSet<>(bundle.getStringArrayList("following"));
         this.followers = new HashSet<>(bundle.getStringArrayList("followers"));
-        this.avatar = bundle.getString("avatar");
     }
 
     public void print() {

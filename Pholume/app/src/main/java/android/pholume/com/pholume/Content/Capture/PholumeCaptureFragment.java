@@ -1,4 +1,4 @@
-package android.pholume.com.pholume.Content.Camera;
+package android.pholume.com.pholume.Content.Capture;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -10,28 +10,46 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import static android.pholume.com.pholume.Content.Capture.CameraActivity.ReturnType.CAPTURE;
+
 /**
  * PHOLUME CAMERA FRAGMENT
  * =======================
- * {@link PholumeCaptureFragment.OnFragmentInteractionListener} interface to handle events.
+ * {@link OnFragmentInteractionListener} interface to handle events.
  */
 public class PholumeCaptureFragment extends Fragment {
 
     private static final String LOG = PholumeCaptureFragment.class.getSimpleName();
-
-    public enum ReturnType {CAPTURE, CLOSE}
-
-    ;
+    private static final String IMAGE_FILE = "IMAGE";
+    private static final String AUDIO_FILE = "AUDIO";
 
     private OnFragmentInteractionListener mListener;
     private FragmentPholumeCaptureBinding mBinding;
 
     private String mImageFile;
     private String mAudioFile;
+    private boolean mImageSaved;
+    private boolean mAudioSaved;
+
+    public static PholumeCaptureFragment newInstance(String imageFile, String audioFile) {
+        PholumeCaptureFragment fragment = new PholumeCaptureFragment();
+        Bundle args = new Bundle();
+        args.putString(IMAGE_FILE, imageFile);
+        args.putString(AUDIO_FILE, audioFile);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        if (args != null) {
+            mImageFile = args.getString(IMAGE_FILE);
+            mAudioFile = args.getString(AUDIO_FILE);
+        }
+        mImageSaved = false;
+        mAudioSaved = false;
     }
 
     @Override
@@ -63,23 +81,26 @@ public class PholumeCaptureFragment extends Fragment {
      * Called when Pholume has been captured and we must switch the view to the preview
      */
     private void onCaptured() {
+        if (!(mImageSaved && mAudioSaved)) return;
         if (mListener != null) {
             if (TextUtils.isEmpty(mImageFile)) {
                 Log.e(LOG, "Image File is empty/null");
             } else if (TextUtils.isEmpty(mAudioFile)) {
                 Log.e(LOG, "Audio File is empty/null");
             } else {
-                mListener.onFragmentInteraction(ReturnType.CAPTURE, mImageFile, mAudioFile);
+                mListener.onFragmentInteraction(CAPTURE);
             }
         }
     }
 
     private void captureImage() {
-
+        mImageSaved = true;
+        onCaptured();
     }
 
     private void captureAudio() {
-
+        mAudioSaved = true;
+        onCaptured();
     }
 
     private void bindListeners() {
@@ -105,18 +126,8 @@ public class PholumeCaptureFragment extends Fragment {
         mBinding.close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.onFragmentInteraction(ReturnType.CLOSE, null, null);
+                mListener.onFragmentInteraction(CameraActivity.ReturnType.CLOSE);
             }
         });
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     */
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(ReturnType type, String image, String audio);
     }
 }

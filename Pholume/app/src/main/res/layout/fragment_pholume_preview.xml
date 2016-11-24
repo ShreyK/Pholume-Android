@@ -2,22 +2,23 @@
 <layout>
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary">
 
         <ScrollView
             android:id="@+id/activity_pholume"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:layout_above="@+id/buttons_container"
+            android:padding="@dimen/activity_horizontal_margin"
             android:scrollbarAlwaysDrawVerticalTrack="false"
-            tools:context="android.pholume.com.pholume.Content.Common.PholumeActivity">
+            android:scrollbarStyle="insideInset">
 
             <include
                 android:id="@+id/pholume_card_container"
                 layout="@layout/card_pholume_feed" />
+
         </ScrollView>
 
         <LinearLayout

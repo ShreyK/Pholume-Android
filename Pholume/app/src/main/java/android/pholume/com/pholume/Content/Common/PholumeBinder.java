@@ -10,18 +10,20 @@ import android.pholume.com.pholume.Model.Pholume;
 import android.pholume.com.pholume.Model.User;
 import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.Network.RestManager;
-import android.pholume.com.pholume.PholumeMediaPlayer;
 import android.pholume.com.pholume.PrefManager;
 import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.Util;
 import android.pholume.com.pholume.databinding.CardPholumeFeedBinding;
 import android.text.InputType;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import com.squareup.picasso.Picasso;
+
+import java.util.Date;
 
 public class PholumeBinder {
 
@@ -76,7 +78,10 @@ public class PholumeBinder {
         //set texts
         binding.pholumeTitle.setText(pholume.description);
         binding.pholumeUser.setText(user.username);
-        binding.pholumeTime.setText(Util.getTimeSince(pholume.dateCreated, context));
+
+        //set time
+        String time = Util.getTimeSince(pholume.dateCreated, context);
+        binding.pholumeTime.setText(time);
 
         //like button
         binding.likeButton.setText(pholume.getNumberOfLikes());
@@ -102,22 +107,26 @@ public class PholumeBinder {
 
         binding.pholumeTitle.setEnabled(false);
         binding.pholumeTitle.setInputType(InputType.TYPE_NULL);
-        binding.pholumeHeader.setOnClickListener(new View.OnClickListener() {
+        binding.pholumeTitle.setGravity(Gravity.CENTER_HORIZONTAL);
+        binding.pholumeFooter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(context, ProfileActivity.class);
-                intent.putExtra("user", user);
-                context.startActivity(intent);
+                startUserActivity();
             }
         });
+        binding.pholumeUser.setText("@" + user.username);
     }
 
-    public void bind(final PholumeMediaPlayer mediaPlayer,
-                     final CardPholumeFeedBinding binding,
-                     String imageFile,
-                     String audioFile) {
+    public void bind(
+//            final PholumeMediaPlayer mediaPlayer,
+            final CardPholumeFeedBinding binding,
+            String imageFile,
+            String audioFile) {
         this.binding = binding;
         this.user = PrefManager.getInstance().getCurrentUser();
+
+        //get image from file
+        //get audio from file
 
         //image resizing;
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -125,17 +134,17 @@ public class PholumeBinder {
         wm.getDefaultDisplay().getMetrics(metrics);
         int MAX_HEIGHT = (int) Math.round(metrics.widthPixels * 1.3);
         ViewGroup.LayoutParams lp = binding.pholumeImage.getLayoutParams();
-        int ratio = pholume.width / pholume.height;
-        if (ratio < 1) {
-            if (pholume.height > MAX_HEIGHT) {
-                lp.height = MAX_HEIGHT;
-            } else {
-                lp.height = pholume.height;
-            }
-        }
+//        int ratio = pholume.width / pholume.height;
+//        if (ratio < 1) {
+//            if (pholume.height > MAX_HEIGHT) {
+        lp.height = MAX_HEIGHT;
+//            } else {
+//                lp.height = pholume.height;
+//            }
+//        }
         binding.pholumeImage.setLayoutParams(lp);
         //show image
-        Picasso.with(context).load(imageFile).fit().centerCrop().into(binding.pholumeImage);
+//        Picasso.with(context).load(imageFile).fit().centerCrop().into(binding.pholumeImage);
 
         //set avatar
         String avatarUrl = Constants.BASE_AVATAR + user.avatar;
@@ -143,11 +152,31 @@ public class PholumeBinder {
                 .placeholder(R.drawable.ic_profile)
                 .into(binding.userImage);
 
+        //set time
+        String time = Util.getTimeSince(new Date(), context);
+        binding.pholumeTime.setText(time);
+
+        binding.likeButton.setVisibility(View.GONE);
+        binding.commentButton.setVisibility(View.GONE);
+
         //set texts
         binding.pholumeTitle.setEnabled(true);
         binding.pholumeTitle.setInputType(InputType.TYPE_CLASS_TEXT);
         binding.pholumeTitle.setHint("Set Description");
-        binding.pholumeUser.setText(user.username);
+        binding.pholumeTitle.setGravity(Gravity.CENTER_HORIZONTAL);
+        binding.pholumeFooter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startUserActivity();
+            }
+        });
+        binding.pholumeUser.setText("@" + user.username);
+    }
+
+    private void startUserActivity() {
+        Intent intent = new Intent(context, ProfileActivity.class);
+        intent.putExtra("user", user);
+        context.startActivity(intent);
     }
 
     public void updateLikeImage() {

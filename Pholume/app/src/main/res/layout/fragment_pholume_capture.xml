@@ -5,7 +5,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.pholume.com.pholume.Content.Camera.AutoFitTextureView
+        <android.pholume.com.pholume.Content.Capture.AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

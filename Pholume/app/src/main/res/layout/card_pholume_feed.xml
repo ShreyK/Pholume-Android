@@ -18,49 +18,14 @@
             android:orientation="vertical">
 
             <RelativeLayout
-                android:id="@+id/pholume_header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp">
-
-                <EditText
-                    android:id="@+id/pholume_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:paddingTop="8dp"
-                    android:text="Cream"
-                    android:textColor="@color/black"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/pholume_user"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/pholume_title"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginBottom="8dp"
-                    android:text="\@hichamoaj"
-                    android:textSize="14sp" />
-
-                <ImageView
-                    android:id="@+id/user_image"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_profile" />
-            </RelativeLayout>
-
-            <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <ImageView
                     android:id="@+id/pholume_image"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp" />
+                    android:layout_height="200dp"
+                    android:src="@color/colorPrimaryDark" />
 
                 <ImageView
                     android:id="@+id/volume_image"
@@ -77,39 +42,80 @@
                 android:id="@+id/pholume_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="6dp"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:paddingTop="6dp">
+                android:paddingBottom="12dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp">
+
+                <ImageView
+                    android:id="@+id/user_image"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:src="@color/black" />
+
+                <EditText
+                    android:id="@+id/pholume_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/pholume_title"
+                    android:layout_centerHorizontal="true"
+                    android:paddingBottom="4dp"
+                    android:paddingTop="0dp"
+                    android:textColor="@color/black"
+                    android:textSize="24sp"
+                    tools:text="Pholume" />
+
+                <TextView
+                    android:id="@+id/pholume_user"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/pholume_title"
+                    android:layout_centerHorizontal="true"
+                    android:textSize="12sp"
+                    tools:text="\@hichamoaj" />
 
                 <TextView
                     android:id="@+id/pholume_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:gravity="center"
+                    android:layout_below="@id/pholume_user"
+                    android:layout_centerHorizontal="true"
+                    android:textSize="10sp"
+                    android:textStyle="italic"
                     tools:text="2 mins ago" />
 
-                <TextView
-                    android:id="@+id/like_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="12dp"
-                    android:layout_toStartOf="@+id/comment_button"
-                    android:drawablePadding="6dp"
-                    android:drawableStart="@drawable/ic_heart"
-                    android:gravity="center_vertical" />
-
-                <TextView
-                    android:id="@+id/comment_button"
+                <LinearLayout
+                    android:id="@+id/buttons_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:drawablePadding="6dp"
-                    android:drawableStart="@drawable/ic_comment"
-                    android:gravity="center_vertical" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/like_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="6dp"
+                        android:drawableStart="@drawable/ic_heart"
+                        android:gravity="center_vertical"
+                        android:padding="2dp"
+                        tools:text="1" />
+
+                    <TextView
+                        android:id="@+id/comment_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBottom="@id/like_button"
+                        android:layout_alignParentEnd="true"
+                        android:drawablePadding="6dp"
+                        android:drawableStart="@drawable/ic_comment"
+                        android:gravity="center_vertical"
+                        android:padding="2dp"
+                        tools:text="1" />
+                </LinearLayout>
             </RelativeLayout>
 
         </LinearLayout>

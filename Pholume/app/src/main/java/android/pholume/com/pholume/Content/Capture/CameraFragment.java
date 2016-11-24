@@ -1,4 +1,4 @@
-package android.pholume.com.pholume.Content.Camera;
+package android.pholume.com.pholume.Content.Capture;
 
 import android.Manifest;
 import android.app.Activity;

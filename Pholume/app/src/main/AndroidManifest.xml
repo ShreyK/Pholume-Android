@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
@@ -24,7 +25,8 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="65b0a02072d0d0bda13093e56d2d04c4dda9bb62" />
-        <activity android:name=".Content.Camera.CameraActivity" />
+
+        <activity android:name=".Content.Capture.CameraActivity" />
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login" />

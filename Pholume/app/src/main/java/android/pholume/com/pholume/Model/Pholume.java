@@ -24,6 +24,9 @@ public class Pholume implements Parcelable {
     @SerializedName("description")
     public String description;
 
+    @SerializedName("numComments")
+    public int numComments;
+
     @SerializedName("date_created")
     public Date dateCreated;
 
@@ -41,9 +44,6 @@ public class Pholume implements Parcelable {
 
     @SerializedName("height")
     public int height;
-
-    @SerializedName("likes")
-    public int numComments;
 
     @SerializedName("likes")
     public HashSet<String> likes;
