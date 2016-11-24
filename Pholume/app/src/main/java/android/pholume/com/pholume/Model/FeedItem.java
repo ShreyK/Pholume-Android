@@ -5,16 +5,15 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 public class FeedItem implements Parcelable{
 
+    @SerializedName("user")
     public User user;
 
+    @SerializedName("pholume")
     public Pholume pholume;
-
-    FeedItem(User user, Pholume pholume){
-        this.user = user;
-        this.pholume = pholume;
-    }
 
     FeedItem(Parcel parcel) {
         Bundle bundle = parcel.readBundle();

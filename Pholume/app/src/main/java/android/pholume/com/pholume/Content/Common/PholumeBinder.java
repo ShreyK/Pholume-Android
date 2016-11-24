@@ -10,10 +10,12 @@ import android.pholume.com.pholume.Model.Pholume;
 import android.pholume.com.pholume.Model.User;
 import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.Network.RestManager;
+import android.pholume.com.pholume.PholumeMediaPlayer;
 import android.pholume.com.pholume.PrefManager;
 import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.Util;
 import android.pholume.com.pholume.databinding.CardPholumeFeedBinding;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,11 +50,11 @@ public class PholumeBinder {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics metrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(metrics);
-        int MAX_HEIGHT = (int) Math.round(metrics.widthPixels*1.3);
+        int MAX_HEIGHT = (int) Math.round(metrics.widthPixels * 1.3);
         ViewGroup.LayoutParams lp = binding.pholumeImage.getLayoutParams();
-        int ratio = pholume.width/pholume.height;
-        if(ratio < 1){
-            if(pholume.height > MAX_HEIGHT){
+        int ratio = pholume.width / pholume.height;
+        if (ratio < 1) {
+            if (pholume.height > MAX_HEIGHT) {
                 lp.height = MAX_HEIGHT;
             } else {
                 lp.height = pholume.height;
@@ -78,7 +80,7 @@ public class PholumeBinder {
 
         //like button
         binding.likeButton.setText(pholume.getNumberOfLikes());
-        binding.likeButton.setOnClickListener( new View.OnClickListener() {
+        binding.likeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 RestManager.getInstance().postLike(pholume.id, likeCallback);
@@ -98,6 +100,8 @@ public class PholumeBinder {
             }
         });
 
+        binding.pholumeTitle.setEnabled(false);
+        binding.pholumeTitle.setInputType(InputType.TYPE_NULL);
         binding.pholumeHeader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -108,11 +112,57 @@ public class PholumeBinder {
         });
     }
 
-    public void updateLikeImage(){
-        if(pholume.likes.contains(PrefManager.getInstance().getCurrentUser().id)){
-            binding.likeButton.setCompoundDrawablesWithIntrinsicBounds(heartFilled, null, null, null);
+    public void bind(final PholumeMediaPlayer mediaPlayer,
+                     final CardPholumeFeedBinding binding,
+                     String imageFile,
+                     String audioFile) {
+        this.binding = binding;
+        this.user = PrefManager.getInstance().getCurrentUser();
+
+        //image resizing;
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+        int MAX_HEIGHT = (int) Math.round(metrics.widthPixels * 1.3);
+        ViewGroup.LayoutParams lp = binding.pholumeImage.getLayoutParams();
+        int ratio = pholume.width / pholume.height;
+        if (ratio < 1) {
+            if (pholume.height > MAX_HEIGHT) {
+                lp.height = MAX_HEIGHT;
+            } else {
+                lp.height = pholume.height;
+            }
+        }
+        binding.pholumeImage.setLayoutParams(lp);
+        //show image
+        Picasso.with(context).load(imageFile).fit().centerCrop().into(binding.pholumeImage);
+
+        //set avatar
+        String avatarUrl = Constants.BASE_AVATAR + user.avatar;
+        Picasso.with(context).load(avatarUrl).fit().centerCrop().transform(new CircleTransform())
+                .placeholder(R.drawable.ic_profile)
+                .into(binding.userImage);
+
+        //set texts
+        binding.pholumeTitle.setEnabled(true);
+        binding.pholumeTitle.setInputType(InputType.TYPE_CLASS_TEXT);
+        binding.pholumeTitle.setHint("Set Description");
+        binding.pholumeUser.setText(user.username);
+    }
+
+    public void updateLikeImage() {
+        if (pholume.likes.contains(PrefManager.getInstance().getCurrentUser().id)) {
+            binding.likeButton.setCompoundDrawablesWithIntrinsicBounds(
+                    heartFilled,
+                    null,
+                    null,
+                    null);
         } else {
-            binding.likeButton.setCompoundDrawablesWithIntrinsicBounds(heart, null, null, null);
+            binding.likeButton.setCompoundDrawablesWithIntrinsicBounds(
+                    heart,
+                    null,
+                    null,
+                    null);
         }
     }
 

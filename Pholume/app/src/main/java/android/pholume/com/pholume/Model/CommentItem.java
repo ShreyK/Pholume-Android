@@ -5,16 +5,15 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 public class CommentItem implements Parcelable {
 
+    @SerializedName("user")
     public User user;
 
+    @SerializedName("comment")
     public Comment comment;
-
-    CommentItem(User user, Comment comment) {
-        this.user = user;
-        this.comment = comment;
-    }
 
     CommentItem(Parcel parcel) {
         Bundle bundle = parcel.readBundle(getClass().getClassLoader());

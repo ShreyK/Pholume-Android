@@ -13,22 +13,17 @@ public class Comment implements Parcelable {
     @SerializedName("_id")
     public String id;
 
+    @SerializedName("uid")
     public String uid;
 
+    @SerializedName("pid")
     public String pid;
 
     @SerializedName("date_created")
     public String dateCreated;
 
+    @SerializedName("comment")
     public String comment;
-
-
-    public Comment(String id, String uid, String username, String email, String pid, String comment) {
-        this.id = id;
-        this.uid = uid;
-        this.pid = pid;
-        this.comment = comment;
-    }
 
     Comment(Parcel parcel) {
         Bundle bundle = parcel.readBundle();
