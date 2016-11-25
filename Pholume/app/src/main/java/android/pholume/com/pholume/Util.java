@@ -11,6 +11,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import static android.os.Environment.getExternalStorageDirectory;
+
 public class Util {
     /**
      * Check if this device has a camera
@@ -74,16 +76,41 @@ public class Util {
         }
     }
 
+    public static void setupRootDirs() {
+        if (isExternalStorageWritable()) {
+            String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                    + File.separator + Constants.BASE_PUBLIC_FOLDER;
+            String rootImagePath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                    + File.separator + Constants.PUBLIC_IMAGE_FOLDER;
+            String rootAudioPath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                    + File.separator + Constants.PUBLIC_AUDIO_FOLDER;
+            File rootDir = new File(rootPath);
+            File rootImageDir = new File(rootImagePath);
+            File rootAudioDir = new File(rootAudioPath);
+            if (!rootDir.exists()) {
+                rootDir.mkdir();
+            }
+            if (!rootImageDir.exists()) {
+                rootImageDir.mkdir();
+            }
+            if (!rootAudioDir.exists()) {
+                rootAudioDir.mkdir();
+            }
+        } else {
+            System.err.println("CANNOT WRITE TO EXTERNAL STORAGE");
+        }
+    }
+
     public static String getRootImageDir() {
         // Get the directory for the user's public pictures directory.
-        return Environment.getExternalStorageDirectory()
-                + File.separator + Constants.PUBLIC_IMAGE_FOLDER + File.separator;
+        return getExternalStorageDirectory().getAbsolutePath()
+                + File.separator + Constants.PUBLIC_IMAGE_FOLDER;
     }
 
     public static String getRootAudioDir() {
         // Get the directory for the user's public pictures directory.
-        return Environment.getExternalStorageDirectory()
-                + File.separator + Constants.PUBLIC_IMAGE_FOLDER+ File.separator;
+        return getExternalStorageDirectory().getAbsolutePath()
+                + File.separator + Constants.PUBLIC_IMAGE_FOLDER;
     }
 
     /* Checks if external storage is available for read and write */

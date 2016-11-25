@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.pholume.com.pholume.Content.Capture.CameraActivity;
+import android.pholume.com.pholume.Content.Capture.CaptureActivity;
 import android.pholume.com.pholume.Content.Feed.FeedFragment;
 import android.pholume.com.pholume.Content.Profile.ProfileFragment;
 import android.pholume.com.pholume.Content.Search.SearchFragment;
@@ -139,7 +139,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void startCameraActivty() {
         if (hasCameraPermission && hasRecordingPermission) {
-            startActivity(new Intent(HomeActivity.this, CameraActivity.class));
+            startActivity(new Intent(HomeActivity.this, CaptureActivity.class));
         }
     }
 

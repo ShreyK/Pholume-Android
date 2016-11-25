@@ -2,10 +2,7 @@ package android.pholume.com.pholume.Content.Capture;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -13,7 +10,6 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.drawable.Drawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -26,29 +22,15 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-import android.media.MediaRecorder;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.pholume.com.pholume.Model.Pholume;
-import android.pholume.com.pholume.Network.PholumeCallback;
-import android.pholume.com.pholume.Network.RestManager;
-import android.pholume.com.pholume.R;
-import android.pholume.com.pholume.databinding.FragmentCameraLayoutBinding;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.util.TypedValue;
-import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -59,20 +41,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Response;
+import static android.pholume.com.pholume.Content.Common.CommonListActivity.LOG;
 
-public class CameraFragment extends Fragment
-        implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
-
+public class PholumeCameraManager {
+    private static final String TAG = PholumeCameraManager.class.getSimpleName();
+    private static final int STATE_PREVIEW = 0;
+    private static final int STATE_WAITING_LOCK = 1;
+    private static final int STATE_WAITING_PRECAPTURE = 2;
+    private static final int STATE_WAITING_NON_PRECAPTURE = 3;
+    private static final int STATE_PICTURE_TAKEN = 4;
+    private static final int MAX_PREVIEW_WIDTH = 1920;
+    private static final int MAX_PREVIEW_HEIGHT = 1080;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
     static {
@@ -82,15 +65,7 @@ public class CameraFragment extends Fragment
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
-    private static final String TAG = CameraFragment.class.getSimpleName();
-    private static final int STATE_PREVIEW = 0;
-    private static final int STATE_WAITING_LOCK = 1;
-    private static final int STATE_WAITING_PRECAPTURE = 2;
-    private static final int STATE_WAITING_NON_PRECAPTURE = 3;
-    private static final int STATE_PICTURE_TAKEN = 4;
-    private static final int MAX_PREVIEW_WIDTH = 1920;
-    private static final int MAX_PREVIEW_HEIGHT = 1080;
-    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
+    public final TextureView.SurfaceTextureListener mSurfaceTextureListener
             = new TextureView.SurfaceTextureListener() {
 
         @Override
@@ -111,29 +86,30 @@ public class CameraFragment extends Fragment
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
-
     };
 
-    //Recording
-    private Context context;
-    private final static int RECORD_TIME = 2000; //ms
-    private MediaRecorder mRecorder;
-    private static File mAudioFile;
+    public enum FlashType {AUTO, YES, NO}
 
-    private static Drawable flashAutoDrawable;
-    private static Drawable flashOnDrawable;
-    private static Drawable flashOffDrawable;
-
-    private static boolean imageSaved = false, audioSaved = false;
-
-    private static AlertDialog.Builder builder;
-    private static AlertDialog dialog;
-
+    private static File mImageFile;
+    private Context mContext;
+    private Activity mActivity;
+    private PholumeCaptureFragment mFragment;
     private String mCameraId;
-    private AutoFitTextureView mTextureView;
+    private Size mPreviewSize;
     private CameraCaptureSession mCaptureSession;
     private CameraDevice mCameraDevice;
-    private Size mPreviewSize;
+    private HandlerThread mBackgroundThread;
+    private Handler mBackgroundHandler;
+    private ImageReader mImageReader;
+    private CaptureRequest.Builder mPreviewRequestBuilder;
+    private CaptureRequest mPreviewRequest;
+    private FlashType mFlashType;
+    private Semaphore mCameraOpenCloseLock = new Semaphore(1);
+    private int mState;
+    private int mSensorOrientation;
+    private boolean mCameraFacingUser;
+    private boolean mFlashSupported;
+
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
 
         @Override
@@ -156,32 +132,22 @@ public class CameraFragment extends Fragment
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            Activity activity = getActivity();
-            if (null != activity) {
-                activity.finish();
+            if (mActivity != null) {
+                mActivity.finish();
             }
         }
 
     };
-    private HandlerThread mBackgroundThread;
-    private Handler mBackgroundHandler;
-    private ImageReader mImageReader;
-    private static File mImageFile;
+
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
             mBackgroundHandler.post(new ImageSaver(image, mImageFile));
-            startRecording();
         }
     };
-    private CaptureRequest.Builder mPreviewRequestBuilder;
-    private CaptureRequest mPreviewRequest;
-    private int mState = STATE_PREVIEW;
-    private Semaphore mCameraOpenCloseLock = new Semaphore(1);
-    private boolean mFlashSupported;
-    private int mSensorOrientation;
+
     private CameraCaptureSession.CaptureCallback mCaptureCallback
             = new CameraCaptureSession.CaptureCallback() {
 
@@ -247,99 +213,14 @@ public class CameraFragment extends Fragment
 
     };
 
-    private FragmentCameraLayoutBinding binding;
-
-    private enum FLASH_TYPE {AUTO, YES, NO}
-
-    private FLASH_TYPE mFlashType;
-    private boolean mCameraFace;
-
-    private void showToast(final String text) {
-        final Activity activity = getActivity();
-        if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity, text, Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-
-    //RECORDING
-    private void startRecording() {
-        if (mRecorder != null) return;
-        mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mRecorder.setOutputFile(mAudioFile.getAbsolutePath());
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        mRecorder.setMaxDuration(RECORD_TIME);
-        mRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
-            @Override
-            public void onInfo(MediaRecorder mediaRecorder, int i, int i1) {
-                if (i == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
-                    setProgressBarVisibile(View.GONE);
-                    mRecorder.stop();
-                    mRecorder.release();
-                    mRecorder = null;
-                    audioSaved = true;
-                    upload();
-                }
-            }
-        });
-        try {
-            mRecorder.prepare();
-            mRecorder.start();
-            setProgressBarVisibile(View.VISIBLE);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void setProgressBarVisibile(final int visibile) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                binding.progressBar.setVisibility(visibile);
-            }
-        });
-    }
-
-    private static void showDialog() {
-//        if(dialog == null){
-        dialog = builder.create();
-//        }
-        dialog.show();
-    }
-
-
-    private static void upload() {
-        if (imageSaved && audioSaved) {
-            showDialog();
-        }
-    }
-
-    private void postPholume(String desc) {
-        RequestBody pFile = RequestBody.create(MediaType.parse("multipart/form-data"), mImageFile);
-        MultipartBody.Part photoBody =
-                MultipartBody.Part.createFormData("photo", mImageFile.getName(), pFile);
-        RequestBody aFile = RequestBody.create(MediaType.parse("multipart/form-data"), mAudioFile);
-        MultipartBody.Part audioBody =
-                MultipartBody.Part.createFormData("audio", mAudioFile.getName(), aFile);
-        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), desc);
-        RestManager.getInstance().postPholume(photoBody, audioBody, description, new PholumeCallback<Pholume>("PostPholume") {
-            @Override
-            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
-                super.onResponse(call, response);
-                if (response.isSuccessful()) {
-                    audioSaved = false;
-                    imageSaved = false;
-                    Log.d("UPLOAD SUCCESSFUL", response.body().id);
-                    getActivity().finish();
-                }
-            }
-        });
+    PholumeCameraManager(Activity activity, PholumeCaptureFragment fragment, String url) {
+        mActivity = activity;
+        mContext = activity;
+        mFragment = fragment;
+        mCameraFacingUser = false;
+        mState = STATE_PREVIEW;
+        mFlashType = FlashType.AUTO;
+        mImageFile = new File(url);
     }
 
     /**
@@ -358,8 +239,12 @@ public class CameraFragment extends Fragment
      * @param aspectRatio       The aspect ratio
      * @return The optimal {@code Size}, or an arbitrary one if none were big enough
      */
-    private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
-                                          int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
+    private static Size chooseOptimalSize(Size[] choices,
+                                          int textureViewWidth,
+                                          int textureViewHeight,
+                                          int maxWidth,
+                                          int maxHeight,
+                                          Size aspectRatio) {
 
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
@@ -391,104 +276,6 @@ public class CameraFragment extends Fragment
         }
     }
 
-    public static CameraFragment newInstance() {
-        return new CameraFragment();
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        binding = FragmentCameraLayoutBinding.inflate(inflater, container, false);
-        flashAutoDrawable = getActivity().getDrawable(R.drawable.ic_flash_auto);
-        flashOnDrawable = getActivity().getDrawable(R.drawable.ic_flash_on);
-        flashOffDrawable = getActivity().getDrawable(R.drawable.ic_flash_off);
-        mFlashType = FLASH_TYPE.AUTO;
-
-        builder = new AlertDialog.Builder(getContext());
-        builder.setCancelable(true);
-        builder.setTitle("Pholume Title");
-        final View view = LayoutInflater.from(getContext()).inflate(R.layout.pholume_dialog_layout, null);
-        builder.setView(view);
-        builder.setPositiveButton("Post", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                postPholume(((EditText) view.findViewById(R.id.dialog_edit_text)).getText().toString());
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                audioSaved = false;
-                imageSaved = false;
-                Activity activity = getActivity();
-                if (null != activity) {
-                    activity.finish();
-                }
-            }
-        });
-        return binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(final View view, Bundle savedInstanceState) {
-        binding.picture.setOnClickListener(this);
-        binding.flash.setOnClickListener(this);
-        mTextureView = binding.texture;
-        updateFlashView();
-    }
-
-    private void updateFlashView() {
-        switch (mFlashType) {
-            case AUTO:
-                binding.flash.setImageDrawable(flashAutoDrawable);
-                break;
-            case YES:
-                binding.flash.setImageDrawable(flashOnDrawable);
-                break;
-            case NO:
-                binding.flash.setImageDrawable(flashOffDrawable);
-                break;
-        }
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        context = getActivity();
-        mCameraFace = false;
-        Date date = new Date();
-        mImageFile = new File(context.getExternalFilesDir(null), date + ".jpg");
-        mAudioFile = new File(context.getExternalFilesDir(null), date + ".mp3");
-    }
-
-    private int convertDPToPX(int dp, DisplayMetrics metrics) {
-        float pixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, metrics);
-        return Math.round(pixels);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        startBackgroundThread();
-
-        // When the screen is turned off and turned back on, the SurfaceTexture is already
-        // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
-        // a camera and start preview from here (otherwise, we wait until the surface is ready in
-        // the SurfaceTextureListener).
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        }
-    }
-
-    @Override
-    public void onPause() {
-        closeCamera();
-        stopBackgroundThread();
-        super.onPause();
-    }
-
     /**
      * Sets up member variables related to camera.
      *
@@ -496,8 +283,7 @@ public class CameraFragment extends Fragment
      * @param height The height of available size for camera preview
      */
     private void setUpCameraOutputs(int width, int height) {
-        Activity activity = getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) mActivity.getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraId : manager.getCameraIdList()) {
                 CameraCharacteristics characteristics
@@ -526,7 +312,7 @@ public class CameraFragment extends Fragment
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
-                int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+                int displayRotation = mActivity.getWindowManager().getDefaultDisplay().getRotation();
                 //noinspection ConstantConditions
                 mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 boolean swappedDimensions = false;
@@ -548,7 +334,7 @@ public class CameraFragment extends Fragment
                 }
 
                 Point displaySize = new Point();
-                activity.getWindowManager().getDefaultDisplay().getSize(displaySize);
+                mActivity.getWindowManager().getDefaultDisplay().getSize(displaySize);
                 int rotatedPreviewWidth = width;
                 int rotatedPreviewHeight = height;
                 int maxPreviewWidth = displaySize.x;
@@ -577,12 +363,12 @@ public class CameraFragment extends Fragment
                         maxPreviewHeight, largest);
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
-                int orientation = getResources().getConfiguration().orientation;
+                int orientation = mContext.getResources().getConfiguration().orientation;
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    mTextureView.setAspectRatio(
+                    mFragment.mTextureView.setAspectRatio(
                             mPreviewSize.getWidth(), mPreviewSize.getHeight());
                 } else {
-                    mTextureView.setAspectRatio(
+                    mFragment.mTextureView.setAspectRatio(
                             mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 }
 
@@ -598,22 +384,22 @@ public class CameraFragment extends Fragment
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
+            Log.e(LOG, "Camera2API probably not supported on this device");
             e.printStackTrace();
         }
     }
 
     /**
-     * Opens the camera specified by {@link CameraFragment#mCameraId}.
+     * Opens the camera specified by {@link PholumeCameraManager#mCameraId}.
      */
-    private void openCamera(int width, int height) {
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
+    void openCamera(int width, int height) {
+        if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
-        Activity activity = getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) mActivity.getSystemService(Context.CAMERA_SERVICE);
         try {
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
@@ -629,7 +415,7 @@ public class CameraFragment extends Fragment
     /**
      * Closes the current {@link CameraDevice}.
      */
-    private void closeCamera() {
+    void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
             if (null != mCaptureSession) {
@@ -654,7 +440,7 @@ public class CameraFragment extends Fragment
     /**
      * Starts a background thread and its {@link Handler}.
      */
-    private void startBackgroundThread() {
+    void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
@@ -663,7 +449,7 @@ public class CameraFragment extends Fragment
     /**
      * Stops the background thread and its {@link Handler}.
      */
-    private void stopBackgroundThread() {
+    void stopBackgroundThread() {
         mBackgroundThread.quitSafely();
         try {
             mBackgroundThread.join();
@@ -679,7 +465,7 @@ public class CameraFragment extends Fragment
      */
     private void createCameraPreviewSession() {
         try {
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+            SurfaceTexture texture = mFragment.mTextureView.getSurfaceTexture();
             assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
@@ -743,11 +529,13 @@ public class CameraFragment extends Fragment
      * @param viewHeight The height of `mTextureView`
      */
     private void configureTransform(int viewWidth, int viewHeight) {
-        Activity activity = getActivity();
-        if (null == mTextureView || null == mPreviewSize || null == activity) {
+        if (null == mFragment
+                || null == mFragment.mTextureView
+                || null == mPreviewSize
+                || null == mActivity) {
             return;
         }
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = mActivity.getWindowManager().getDefaultDisplay().getRotation();
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
         RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
@@ -764,13 +552,13 @@ public class CameraFragment extends Fragment
         } else if (Surface.ROTATION_180 == rotation) {
             matrix.postRotate(180, centerX, centerY);
         }
-        mTextureView.setTransform(matrix);
+        mFragment.mTextureView.setTransform(matrix);
     }
 
     /**
      * Initiate a still image capture.
      */
-    private void takePicture() {
+    void takePicture() {
         lockFocus();
     }
 
@@ -815,8 +603,7 @@ public class CameraFragment extends Fragment
      */
     private void captureStillPicture() {
         try {
-            final Activity activity = getActivity();
-            if (null == activity || null == mCameraDevice) {
+            if (null == mActivity || null == mCameraDevice) {
                 return;
             }
             // This is the CaptureRequest.Builder that we use to take a picture.
@@ -830,7 +617,7 @@ public class CameraFragment extends Fragment
             setAutoFlash(captureBuilder);
 
             // Orientation
-            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+            int rotation = mActivity.getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
 
             CameraCaptureSession.CaptureCallback CaptureCallback
@@ -840,7 +627,6 @@ public class CameraFragment extends Fragment
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-//                    showToast("Saved: " + mImageFile);
                     Log.d(TAG, mImageFile.toString());
                     unlockFocus();
                 }
@@ -888,39 +674,12 @@ public class CameraFragment extends Fragment
         }
     }
 
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.picture:
-                takePicture();
-                break;
-            case R.id.flash:
-                switch (mFlashType) {
-                    case AUTO:
-                        mFlashType = FLASH_TYPE.YES;
-                        break;
-                    case YES:
-                        mFlashType = FLASH_TYPE.NO;
-                        break;
-                    case NO:
-                        mFlashType = FLASH_TYPE.AUTO;
-                        break;
-                }
-                updateFlashView();
-                break;
-//            case R.id.change_camera:
-//                mCameraFace = !mCameraFace;
-//                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-//                break;
-        }
-    }
-
     private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
         if (mFlashSupported) {
-            if (mFlashType == FLASH_TYPE.AUTO) {
+            if (mFlashType == FlashType.AUTO) {
                 requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-            } else if (mFlashType == FLASH_TYPE.YES) {
+            } else if (mFlashType == FlashType.YES) {
                 requestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_SINGLE);
             } else {
                 requestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
@@ -944,13 +703,14 @@ public class CameraFragment extends Fragment
          */
         private final File mFile;
 
-        public ImageSaver(Image image, File file) {
+        ImageSaver(Image image, File file) {
             mImage = image;
             mFile = file;
         }
 
         @Override
         public void run() {
+            PholumeCaptureFragment.setDimensions(mImage.getWidth(), mImage.getHeight());
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
@@ -969,11 +729,28 @@ public class CameraFragment extends Fragment
                         e.printStackTrace();
                     }
                 }
-                imageSaved = true;
-                upload();
+                //call image has been saved to file
+                PholumeCaptureFragment.mImageSaved = true;
+                PholumeCaptureFragment.onCaptured();
             }
         }
 
+    }
+
+    FlashType getFlashType() {
+        return mFlashType;
+    }
+
+    void setFlashType(FlashType type) {
+        mFlashType = type;
+    }
+
+    boolean getIsFacingUser() {
+        return mCameraFacingUser;
+    }
+
+    void setIsFacingUser() {
+        mCameraFacingUser = !mCameraFacingUser;
     }
 
     /**
@@ -987,5 +764,21 @@ public class CameraFragment extends Fragment
                     (long) rhs.getWidth() * rhs.getHeight());
         }
 
+    }
+
+    /**
+     * Shows Toast on Activity with given parameter text
+     *
+     * @param text
+     */
+    private void showToast(final String text) {
+        if (mActivity != null) {
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mActivity, text, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }

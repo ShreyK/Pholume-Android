@@ -7,5 +7,5 @@ package android.pholume.com.pholume.Content.Capture;
  * activity.
  */
 public interface OnFragmentInteractionListener {
-    void onFragmentInteraction(CameraActivity.ReturnType type);
+    void onFragmentInteraction(CaptureActivity.ReturnType type);
 }

@@ -26,7 +26,7 @@
             android:name="io.fabric.ApiKey"
             android:value="65b0a02072d0d0bda13093e56d2d04c4dda9bb62" />
 
-        <activity android:name=".Content.Capture.CameraActivity" />
+        <activity android:name=".Content.Capture.CaptureActivity" />
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login" />
