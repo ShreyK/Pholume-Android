@@ -201,6 +201,10 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
         }
     }
 
+    public FragmentPholumeCaptureBinding getBinding(){
+        return mBinding;
+    }
+
     public void setProgressBarVisibile(final int visibile) {
 //        mActivity.runOnUiThread(new Runnable() {
 //            @Override

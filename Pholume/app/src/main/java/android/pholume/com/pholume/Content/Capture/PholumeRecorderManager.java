@@ -3,19 +3,21 @@ package android.pholume.com.pholume.Content.Capture;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaRecorder;
+import android.pholume.com.pholume.databinding.FragmentPholumeCaptureBinding;
 import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
 
-public class PholumeRecorderManager {
-    private final static int RECORD_TIME = 2000; //ms
+import static android.pholume.com.pholume.Constants.RECORD_TIME;
 
+public class PholumeRecorderManager {
     //Recording
     private Context mContext;
     private Activity mActivity;
     private PholumeCaptureFragment mFragment;
     private MediaRecorder mRecorder;
+    private FragmentPholumeCaptureBinding binding;
     private static File mAudioFile;
 
     PholumeRecorderManager(Activity activity, PholumeCaptureFragment fragment, String url) {
@@ -49,6 +51,7 @@ public class PholumeRecorderManager {
         try {
             mRecorder.prepare();
             mFragment.setProgressBarVisibile(View.VISIBLE);
+            binding = mFragment.getBinding();
             mRecorder.start();
         } catch (Exception e) {
             e.printStackTrace();

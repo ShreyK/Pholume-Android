@@ -13,4 +13,5 @@ public class Constants {
     public static final String BASE_PUBLIC_FOLDER = "Pholume";
     public static final String PUBLIC_IMAGE_FOLDER = BASE_PUBLIC_FOLDER + File.separator + "Images";
     public static final String PUBLIC_AUDIO_FOLDER = BASE_PUBLIC_FOLDER + File.separator +  "Audio";
+    public static final int RECORD_TIME = 2000; //ms
 }
