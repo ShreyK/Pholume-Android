@@ -135,7 +135,6 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.capture:
-                setProgressBarVisibile(View.VISIBLE);
                 mPholumeCameraManager.takePicture();
                 mPholumeRecorderManager.startRecording();
                 break;

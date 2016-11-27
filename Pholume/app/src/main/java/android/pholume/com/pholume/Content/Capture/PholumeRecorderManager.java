@@ -48,8 +48,8 @@ public class PholumeRecorderManager {
         });
         try {
             mRecorder.prepare();
+            mFragment.setProgressBarVisibile(View.VISIBLE);
             mRecorder.start();
-            mFragment.setProgressBarVisibile(View.GONE);
         } catch (Exception e) {
             e.printStackTrace();
         }
