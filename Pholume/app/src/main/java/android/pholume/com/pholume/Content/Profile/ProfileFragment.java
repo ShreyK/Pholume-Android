@@ -73,18 +73,6 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         activity = getActivity();
-        pholumeList = new ArrayList<>();
-        currentUser = PrefManager.getInstance().getCurrentUser();
-        adapter = new ProfileListAdapter(getActivity(), pholumeList);
-        recyclerView = (RecyclerView) binding.getRoot().findViewById(R.id.recycler_view);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                fetchUserPholumes();
-            }
-        });
 
         if (activity instanceof HomeActivity) {
             user = PrefManager.getInstance().getCurrentUser();
@@ -94,6 +82,19 @@ public class ProfileFragment extends Fragment {
                 user = bundle.getParcelable("user");
             }
         }
+
+        pholumeList = new ArrayList<>();
+        currentUser = PrefManager.getInstance().getCurrentUser();
+        adapter = new ProfileListAdapter(getActivity(), pholumeList, user);
+        recyclerView = (RecyclerView) binding.getRoot().findViewById(R.id.recycler_view);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                fetchUserPholumes();
+            }
+        });
         setupListeners();
         fetchUserPholumes();
         return binding.getRoot();

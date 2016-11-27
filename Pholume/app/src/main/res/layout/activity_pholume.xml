@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <RelativeLayout
-        android:id="@+id/activity_pholume"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:context="android.pholume.com.pholume.Content.Common.PholumeActivity">
-
-
-        <include
-            android:id="@+id/pholume_view"
-            layout="@layout/pholume_view"/>
-    </RelativeLayout>
-</layout>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frame"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000"
+    tools:context=".Content.Common.PholumeActivity" />

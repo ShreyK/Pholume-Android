@@ -1,95 +1,53 @@
 package android.pholume.com.pholume.Content.Common;
 
 import android.content.Context;
-import android.databinding.DataBindingUtil;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.pholume.com.pholume.Constants;
+import android.pholume.com.pholume.Content.Feed.FeedFragment;
 import android.pholume.com.pholume.Model.Pholume;
 import android.pholume.com.pholume.Model.User;
-import android.pholume.com.pholume.Network.PholumeCallback;
-import android.pholume.com.pholume.PholumeMediaPlayer;
 import android.pholume.com.pholume.R;
-import android.pholume.com.pholume.databinding.ActivityPholumeBinding;
-import android.pholume.com.pholume.databinding.PholumeViewContainerBinding;
-import android.pholume.com.pholume.databinding.PholumeViewFooterBinding;
-import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 
-import retrofit2.Call;
-import retrofit2.Response;
+import java.util.ArrayList;
+
+import static android.pholume.com.pholume.Content.Feed.FeedFragment.mediaPlayer;
 
 public class PholumeActivity extends AppCompatActivity {
 
     private static final String LOG = PholumeActivity.class.getSimpleName();
 
-    private Context context;
-    private static PholumeMediaPlayer mediaPlayer;
-    private Drawable volumeOff;
-    private Drawable volumeOn;
+    public static final String USER_EXTRA = "USER";
+    public static final String LIST_EXTRA = "LIST";
+    public static final String POSITION_EXTRA = "POSITION";
 
-    ActivityPholumeBinding binding;
-    PholumeViewContainerBinding containerBinding;
-    PholumeViewFooterBinding footerBinding;
-    PholumeBinder binder;
-    PholumeCallback<Pholume> likeCallback;
+    private Context context;
+    private FeedFragment fragment;
+
+    private ArrayList<Pholume> pholumes;
+    private User user;
+    private int position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_pholume);
-        containerBinding = binding.pholumeView.pholumeContainer;
-        footerBinding = binding.pholumeView.pholumeFooter;
-        binder = new PholumeBinder(this);
-
-        volumeOff = getDrawable(R.drawable.ic_volume_off);
-        volumeOn = getDrawable(R.drawable.ic_volume_on);
+        setContentView(R.layout.activity_pholume);
 
         Bundle bundle = getIntent().getExtras();
-        final Pholume pholume = bundle.getParcelable("pholume");
-        final User user = bundle.getParcelable("user");
-
-        likeCallback = new PholumeCallback<Pholume>("Like") {
-            @Override
-            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
-                super.onResponse(call, response);
-                if (response.isSuccessful()) {
-                    binder.updatePholume(response.body());
-                    binder.updateLikes(footerBinding);
-                    binder.updateLikeImage(footerBinding);
-                } else {
-                    Snackbar.make(binding.getRoot(),
-                            response.code() + ": " + response.message(),
-                            Snackbar.LENGTH_SHORT)
-                            .show();
-                    Log.e("like", response.message());
-                }
-            }
-        };
-        binder.bind(containerBinding, footerBinding, pholume, user, likeCallback);
-
-        //set image listener
-        containerBinding.pholumeImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                        mediaPlayer.stop();
-                        containerBinding.volumeImage.setImageDrawable(volumeOff);
-                    } else {
-                        containerBinding.volumeImage.setImageDrawable(volumeOn);
-                        mediaPlayer = PholumeMediaPlayer.create(context,
-                                Constants.BASE_AUDIO + pholume.audioUrl);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Snackbar.make(view, "Error playing audio", Snackbar.LENGTH_SHORT).show();
-                }
-            }
-        });
+        if (bundle != null) {
+            pholumes = bundle.getParcelableArrayList(LIST_EXTRA);
+            position = bundle.getInt(POSITION_EXTRA, 0);
+            user = bundle.getParcelable(USER_EXTRA);
+        } else {
+            Log.e(LOG, "No bundle parsed");
+            return;
+        }
+        if (fragment == null) {
+            fragment = FeedFragment.newInstance(user, pholumes, true);
+        }
+        setFragment(fragment);
     }
 
     @Override
@@ -107,4 +65,11 @@ public class PholumeActivity extends AppCompatActivity {
         }
         mediaPlayer = null;
     }
+
+    private void setFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.frame, fragment)
+                .commit();
+    }
+
 }
