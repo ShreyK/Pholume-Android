@@ -1,9 +1,14 @@
 package android.pholume.com.pholume.Content.Capture;
 
 import android.os.Bundle;
+import android.pholume.com.pholume.Model.CapturedPholume;
+import android.pholume.com.pholume.Model.Pholume;
+import android.pholume.com.pholume.Network.PholumeCallback;
+import android.pholume.com.pholume.Network.RestManager;
 import android.pholume.com.pholume.R;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -13,6 +18,8 @@ import java.util.Date;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class CaptureActivity extends AppCompatActivity implements OnFragmentInteractionListener {
 
@@ -27,13 +34,13 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
     private PholumePreviewFragment previewFragment;
 
     @Override
-    public void onFragmentInteraction(ReturnType type) {
+    public void onFragmentInteraction(ReturnType type, CapturedPholume pholume) {
         switch (type) {
             case CAPTURE:
-                setPreviewFragment();
+                setPreviewFragment(pholume);
                 break;
             case POST:
-                postPholume(previewFragment.getTitle());
+                postPholume(pholume);
                 break;
             case CLOSE:
                 finish();
@@ -74,9 +81,9 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
         setFragment(captureFragment);
     }
 
-    private void setPreviewFragment() {
+    private void setPreviewFragment(CapturedPholume pholume) {
         if (previewFragment == null) {
-            previewFragment = PholumePreviewFragment.newInstance(mImageFileName, mAudioFileName);
+            previewFragment = PholumePreviewFragment.newInstance(mImageFileName, mAudioFileName, pholume);
         }
         setFragment(previewFragment);
     }
@@ -88,28 +95,28 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
     }
 
 
-    private void postPholume(String desc) {
-        RequestBody pFile = RequestBody.create(MediaType.parse("multipart/form-data"), mImageFileName);
+    private void postPholume(CapturedPholume pholume) {
+        RequestBody pFile = RequestBody.create(MediaType.parse("multipart/form-data"), mImageFile);
         MultipartBody.Part photoBody =
                 MultipartBody.Part.createFormData("photo", mImageFile.getName(), pFile);
-        RequestBody aFile = RequestBody.create(MediaType.parse("multipart/form-data"), mAudioFileName);
+        RequestBody aFile = RequestBody.create(MediaType.parse("multipart/form-data"), mAudioFile);
         MultipartBody.Part audioBody =
                 MultipartBody.Part.createFormData("audio", mAudioFile.getName(), aFile);
-        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), desc);
+        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), pholume.description);
         System.out.println("========");
         System.out.println("photo " + mImageFile.getName() + " " + pFile.toString());
         System.out.println("audio" + mAudioFile.getName() + " " + aFile.toString());
-        System.out.println("desc " + desc);
+        System.out.println("desc " + pholume.description);
         System.out.println("========");
-//        RestManager.getInstance().postPholume(photoBody, audioBody, description, new PholumeCallback<Pholume>("PostPholume") {
-//            @Override
-//            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
-//                super.onResponse(call, response);
-//                if (response.isSuccessful()) {
-//                    Log.d("UPLOAD SUCCESSFUL", response.body().id);
-//                    finish();
-//                }
-//            }
-//        });
+        RestManager.getInstance().postPholume(photoBody, audioBody, description, new PholumeCallback<Pholume>("PostPholume") {
+            @Override
+            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
+                super.onResponse(call, response);
+                if (response.isSuccessful()) {
+                    Log.d("UPLOAD SUCCESSFUL", response.body().id);
+                    finish();
+                }
+            }
+        });
     }
 }

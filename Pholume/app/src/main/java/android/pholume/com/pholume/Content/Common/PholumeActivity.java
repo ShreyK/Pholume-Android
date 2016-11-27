@@ -55,7 +55,7 @@ public class PholumeActivity extends AppCompatActivity {
                     binder.updateLikes();
                     binder.updateLikeImage();
                 } else {
-                    Snackbar.make(binding.pholumeCardContainer.getRoot(),
+                    Snackbar.make(binding.getRoot(),
                             response.code() + ": " + response.message(),
                             Snackbar.LENGTH_SHORT)
                             .show();
@@ -63,18 +63,18 @@ public class PholumeActivity extends AppCompatActivity {
                 }
             }
         };
-        binder.bind(binding.pholumeCardContainer, pholume, user, likeCallback);
+        binder.bind(binding.image, binding.pholumeTitle, pholume, user, likeCallback);
 
         //set image listener
-        binding.pholumeCardContainer.pholumeImage.setOnClickListener(new View.OnClickListener() {
+        binding.image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
+                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                         mediaPlayer.stop();
-                        binding.pholumeCardContainer.volumeImage.setImageDrawable(volumeOff);
+                        binding.volumeImage.setImageDrawable(volumeOff);
                     } else {
-                        binding.pholumeCardContainer.volumeImage.setImageDrawable(volumeOn);
+                        binding.volumeImage.setImageDrawable(volumeOn);
                         mediaPlayer = PholumeMediaPlayer.create(context,
                                 Constants.BASE_AUDIO + pholume.audioUrl);
                     }
@@ -94,9 +94,9 @@ public class PholumeActivity extends AppCompatActivity {
     @Override
     public void onPause() {
         super.onPause();
-        try{
+        try {
             mediaPlayer.destroy();
-        } catch(Exception e){
+        } catch (Exception e) {
             Log.e(LOG, "Couldnt stop MediaPlayer onPause");
         }
         mediaPlayer = null;

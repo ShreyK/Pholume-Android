@@ -407,7 +407,7 @@ public class PholumeCameraManager {
             e.printStackTrace();
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }
@@ -710,6 +710,7 @@ public class PholumeCameraManager {
 
         @Override
         public void run() {
+            PholumeCaptureFragment.mPholume.setDimensions(mImage.getWidth(), mImage.getHeight());
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);

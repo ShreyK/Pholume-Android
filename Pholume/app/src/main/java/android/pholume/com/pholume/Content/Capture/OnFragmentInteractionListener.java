@@ -1,5 +1,7 @@
 package android.pholume.com.pholume.Content.Capture;
 
+import android.pholume.com.pholume.Model.CapturedPholume;
+
 /**
  * This interface must be implemented by activities that contain this
  * fragment to allow an interaction in this fragment to be communicated
@@ -7,5 +9,5 @@ package android.pholume.com.pholume.Content.Capture;
  * activity.
  */
 public interface OnFragmentInteractionListener {
-    void onFragmentInteraction(CaptureActivity.ReturnType type);
+    void onFragmentInteraction(CaptureActivity.ReturnType type, CapturedPholume pholume);
 }

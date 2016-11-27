@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.pholume.com.pholume.Model.CapturedPholume;
 import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.databinding.FragmentPholumeCaptureBinding;
 import android.support.v4.app.Fragment;
@@ -37,9 +38,10 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
     private static String mAudioFile;
     public static boolean mImageSaved;
     public static boolean mAudioSaved;
-    public AutoFitTextureView mTextureView;
+    public static CapturedPholume mPholume;
 
     //Views
+    public AutoFitTextureView mTextureView;
     private static Drawable flashAutoDrawable;
     private static Drawable flashOnDrawable;
     private static Drawable flashOffDrawable;
@@ -71,6 +73,7 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
         if (mPholumeRecorderManager == null) {
             mPholumeRecorderManager = new PholumeRecorderManager(mActivity, this, mAudioFile);
         }
+        mPholume = new CapturedPholume(mImageFile, mAudioFile);
         mImageSaved = false;
         mAudioSaved = false;
     }
@@ -155,7 +158,7 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
                 mPholumeCameraManager.openCamera(mTextureView.getWidth(), mTextureView.getHeight());
                 break;
             case R.id.close:
-                mListener.onFragmentInteraction(CaptureActivity.ReturnType.CLOSE);
+                mListener.onFragmentInteraction(CaptureActivity.ReturnType.CLOSE, null);
                 break;
         }
     }
@@ -171,7 +174,7 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
             } else if (TextUtils.isEmpty(mAudioFile)) {
                 Log.e(LOG, "Audio File is empty/null");
             } else {
-                mListener.onFragmentInteraction(CaptureActivity.ReturnType.CAPTURE);
+                mListener.onFragmentInteraction(CaptureActivity.ReturnType.CAPTURE, mPholume);
             }
         }
     }

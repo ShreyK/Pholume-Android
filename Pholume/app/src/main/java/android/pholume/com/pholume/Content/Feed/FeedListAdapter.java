@@ -81,7 +81,7 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
             }
         };
         binding.volumeImage.setVisibility(View.GONE);
-        binder.bind(binding, pholume, user, likeCallback);
+        binder.bind(binding.pholumeImage, binding.pholumeTitle, pholume, user, likeCallback);
 
         //set image listener
         binding.pholumeImage.setOnClickListener(new View.OnClickListener() {
