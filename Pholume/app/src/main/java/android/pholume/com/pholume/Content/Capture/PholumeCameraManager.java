@@ -45,10 +45,8 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import static android.pholume.com.pholume.Content.Common.CommonListActivity.LOG;
-
 public class PholumeCameraManager {
-    private static final String TAG = PholumeCameraManager.class.getSimpleName();
+    private static final String LOG = PholumeCameraManager.class.getSimpleName();
     private static final int STATE_PREVIEW = 0;
     private static final int STATE_WAITING_LOCK = 1;
     private static final int STATE_WAITING_PRECAPTURE = 2;
@@ -271,7 +269,7 @@ public class PholumeCameraManager {
         } else if (notBigEnough.size() > 0) {
             return Collections.max(notBigEnough, new CompareSizesByArea());
         } else {
-            Log.e(TAG, "Couldn't find any suitable preview size");
+            Log.e(LOG, "Couldn't find any suitable preview size");
             return choices[0];
         }
     }
@@ -330,7 +328,7 @@ public class PholumeCameraManager {
                         }
                         break;
                     default:
-                        Log.e(TAG, "Display rotation is invalid: " + displayRotation);
+                        Log.e(LOG, "Display rotation is invalid: " + displayRotation);
                 }
 
                 Point displaySize = new Point();
@@ -409,6 +407,8 @@ public class PholumeCameraManager {
             e.printStackTrace();
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
+        } catch (IllegalArgumentException e){
+            e.printStackTrace();
         }
     }
 
@@ -627,7 +627,7 @@ public class PholumeCameraManager {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    Log.d(TAG, mImageFile.toString());
+                    Log.d(LOG, mImageFile.toString());
                     unlockFocus();
                 }
             };
@@ -710,7 +710,6 @@ public class PholumeCameraManager {
 
         @Override
         public void run() {
-            PholumeCaptureFragment.setDimensions(mImage.getWidth(), mImage.getHeight());
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);

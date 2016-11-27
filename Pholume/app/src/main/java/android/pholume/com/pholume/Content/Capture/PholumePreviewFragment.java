@@ -3,12 +3,16 @@ package android.pholume.com.pholume.Content.Capture;
 import android.content.Context;
 import android.os.Bundle;
 import android.pholume.com.pholume.Content.Common.PholumeBinder;
+import android.pholume.com.pholume.PholumeMediaPlayer;
+import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.databinding.FragmentPholumePreviewBinding;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.io.FileInputStream;
 
 import static android.pholume.com.pholume.Content.Capture.CaptureActivity.ReturnType.CLOSE;
 import static android.pholume.com.pholume.Content.Capture.CaptureActivity.ReturnType.POST;
@@ -24,28 +28,25 @@ public class PholumePreviewFragment extends Fragment {
 
     private static final String LOG = PholumePreviewFragment.class.getSimpleName();
     private static final String IMAGE_FILE = "IMAGE";
-    private static final String IMAGE_WIDTH = "IMAGE_WIDTH";
-    private static final String IMAGE_HEIGHT = "IMAGE_HEIGHT";
     private static final String AUDIO_FILE = "AUDIO";
     private static final String SAVED_DESCRIPTION = "SAVED_DESCRIPTION";
 
+    private Context mContext;
     private String mImageFile;
     private String mAudioFile;
 
-    private int mImageWidth;
-    private int mImageHeight;
+    private String mTitle;
 
     private OnFragmentInteractionListener mListener;
     private FragmentPholumePreviewBinding mBinding;
+    private PholumeMediaPlayer mMediaPlayer;
     private PholumeBinder mBinder;
 
-    public static PholumePreviewFragment newInstance(String imageFile, String audioFile, int w, int h) {
+    public static PholumePreviewFragment newInstance(String imageFile, String audioFile) {
         PholumePreviewFragment fragment = new PholumePreviewFragment();
         Bundle args = new Bundle();
         args.putString(IMAGE_FILE, imageFile);
         args.putString(AUDIO_FILE, audioFile);
-        args.putInt(IMAGE_WIDTH, w);
-        args.putInt(IMAGE_HEIGHT, h);
         fragment.setArguments(args);
         return fragment;
     }
@@ -57,9 +58,8 @@ public class PholumePreviewFragment extends Fragment {
         if (args != null) {
             mImageFile = args.getString(IMAGE_FILE);
             mAudioFile = args.getString(AUDIO_FILE);
-            mImageWidth = args.getInt(IMAGE_WIDTH);
-            mImageHeight = args.getInt(IMAGE_HEIGHT);
         }
+        mContext = getContext();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class PholumePreviewFragment extends Fragment {
         if (outState == null) {
             outState = new Bundle();
         }
-        outState.putString(SAVED_DESCRIPTION, mBinding.toString());
+        outState.putString(SAVED_DESCRIPTION, mBinding.pholumeCardContainer.pholumeTitle.toString());
     }
 
     @Override
@@ -100,8 +100,8 @@ public class PholumePreviewFragment extends Fragment {
     }
 
     private void bindViews() {
-        if(mBinder == null) mBinder = new PholumeBinder(getContext());
-        mBinder.bind(mBinding.pholumeCardContainer, mImageFile, mAudioFile, mImageWidth, mImageHeight);
+        if (mBinder == null) mBinder = new PholumeBinder(getActivity());
+        mBinder.bind(mBinding.pholumeCardContainer, mImageFile, mAudioFile);
     }
 
     private void bindListeners() {
@@ -112,40 +112,42 @@ public class PholumePreviewFragment extends Fragment {
             }
         });
 
+        mBinding.pholumeCardContainer.pholumeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    FileInputStream is = new FileInputStream(mAudioFile);
+                    if (mMediaPlayer == null) {
+                        mMediaPlayer = PholumeMediaPlayer.create(mContext, is.getFD());
+                        mBinding.pholumeCardContainer.volumeImage.setImageDrawable(
+                                getContext().getDrawable(R.drawable.ic_volume_on));
+                    } else if (mMediaPlayer.isPlaying()) {
+                        mMediaPlayer.stop();
+                        mMediaPlayer = null;
+                        mBinding.pholumeCardContainer.volumeImage.setImageDrawable(
+                                getContext().getDrawable(R.drawable.ic_volume_off));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         mBinding.post.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String desc = mBinding.pholumeCardContainer.pholumeTitle.getText().toString();
-                if (TextUtils.isEmpty(desc)) {
+                String title = mBinding.pholumeCardContainer.pholumeTitle.getText().toString();
+                if (TextUtils.isEmpty(title)) {
                     mBinding.pholumeCardContainer.pholumeTitle.setError("Required");
                 } else {
+                    mTitle = title;
                     mListener.onFragmentInteraction(POST);
                 }
             }
         });
     }
 
-//
-//    private void postPholume(String desc) {
-//        RequestBody pFile = RequestBody.create(MediaType.parse("multipart/form-data"), mImageFile);
-//        MultipartBody.Part photoBody =
-//                MultipartBody.Part.createFormData("photo", mImageFile.getName(), pFile);
-//        RequestBody aFile = RequestBody.create(MediaType.parse("multipart/form-data"), mAudioFile);
-//        MultipartBody.Part audioBody =
-//                MultipartBody.Part.createFormData("audio", mAudioFile.getName(), aFile);
-//        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), desc);
-//        RestManager.getInstance().postPholume(photoBody, audioBody, description, new PholumeCallback<Pholume>("PostPholume") {
-//            @Override
-//            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
-//                super.onResponse(call, response);
-//                if (response.isSuccessful()) {
-//                    audioSaved = false;
-//                    imageSaved = false;
-//                    Log.d("UPLOAD SUCCESSFUL", response.body().id);
-//                    getActivity().finish();
-//                }
-//            }
-//        });
-//    }
-
+    public String getTitle() {
+        return mTitle;
+    }
 }

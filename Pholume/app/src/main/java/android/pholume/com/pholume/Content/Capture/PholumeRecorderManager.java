@@ -18,14 +18,14 @@ public class PholumeRecorderManager {
     private MediaRecorder mRecorder;
     private static File mAudioFile;
 
-    public PholumeRecorderManager(Activity activity, PholumeCaptureFragment fragment, String url) {
+    PholumeRecorderManager(Activity activity, PholumeCaptureFragment fragment, String url) {
         mActivity = activity;
         mContext = activity;
         mFragment = fragment;
         mAudioFile = new File(url);
     }
 
-    private void startRecording() {
+    void startRecording() {
         if (mRecorder != null) return;
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -41,7 +41,8 @@ public class PholumeRecorderManager {
                     mRecorder.stop();
                     mRecorder.release();
                     mRecorder = null;
-                    //send message that audio is saved
+                    PholumeCaptureFragment.mAudioSaved = true;
+                    PholumeCaptureFragment.onCaptured();
                 }
             }
         });

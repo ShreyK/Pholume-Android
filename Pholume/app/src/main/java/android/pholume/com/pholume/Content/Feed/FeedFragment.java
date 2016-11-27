@@ -23,10 +23,10 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import static android.pholume.com.pholume.Content.Common.CommonListActivity.LOG;
 
 public class FeedFragment extends Fragment {
 
+    private final static String LOG = FeedFragment.class.getSimpleName();
     private Context context;
     private View rootView;
     private SwipeRefreshLayout refreshLayout;
@@ -46,9 +46,9 @@ public class FeedFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        try{
+        try {
             mediaPlayer.destroy();
-        } catch(Exception e){
+        } catch (Exception e) {
             Log.e(LOG, "Couldnt stop MediaPlayer onPause");
         }
         mediaPlayer = null;
@@ -77,10 +77,10 @@ public class FeedFragment extends Fragment {
         return rootView;
     }
 
-    public void playAudio(String url){
+    public void playAudio(String url) {
         try {
-            if(FeedFragment.mediaPlayer != null && FeedFragment.mediaPlayer.isPlaying()){
-                if(audioUrl.equals(url)){
+            if (FeedFragment.mediaPlayer != null && FeedFragment.mediaPlayer.isPlaying()) {
+                if (audioUrl.equals(url)) {
                     mediaPlayer.stop();
                 } else {
                     mediaPlayer.destroy();

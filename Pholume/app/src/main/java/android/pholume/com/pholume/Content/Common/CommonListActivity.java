@@ -26,7 +26,7 @@ import retrofit2.Response;
 
 public class CommonListActivity extends AppCompatActivity {
 
-    public final static String LOG = "LIST_ACTIVTY";
+    private final static String LOG = CommonListActivity.class.getSimpleName();
     public final static String TYPE_EXTRA = "type";
     public final static String USER_EXTRA = "user";
     public final static String PHOLUME_EXTRA = "pholume";

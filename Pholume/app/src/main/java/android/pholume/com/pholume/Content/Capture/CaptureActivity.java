@@ -10,12 +10,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+
 public class CaptureActivity extends AppCompatActivity implements OnFragmentInteractionListener {
 
     public enum ReturnType {CAPTURE, POST, CLOSE}
 
-    private String mImageFile;
-    private String mAudioFile;
+    private String mImageFileName;
+    private String mAudioFileName;
+    private File mImageFile;
+    private File mAudioFile;
 
     private PholumeCaptureFragment captureFragment;
     private PholumePreviewFragment previewFragment;
@@ -24,10 +30,10 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
     public void onFragmentInteraction(ReturnType type) {
         switch (type) {
             case CAPTURE:
-                setPreviewFragment(captureFragment.getImageWidth(),captureFragment.getImageHeight());
+                setPreviewFragment();
                 break;
             case POST:
-                postPholume();
+                postPholume(previewFragment.getTitle());
                 break;
             case CLOSE:
                 finish();
@@ -48,33 +54,29 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
         String audioFileName = format.format(date) + ".mp3";
 
         try {
-            File imageFile = new File(getExternalFilesDir(null), imageFileName);
-            mImageFile = imageFile.getPath();
-            File audioFile = new File(getExternalFilesDir(null), audioFileName);
-            mAudioFile = audioFile.getPath();
+            mImageFile = new File(getExternalFilesDir(null), imageFileName);
+            mImageFileName = mImageFile.getPath();
+            mAudioFile = new File(getExternalFilesDir(null), audioFileName);
+            mAudioFileName = mAudioFile.getPath();
         } catch (Exception e) {
-            System.err.println(mImageFile);
-            System.err.println(mAudioFile);
+            System.err.println(mImageFileName);
+            System.err.println(mAudioFileName);
             e.printStackTrace();
         }
 
         setCaptureFragment();
     }
 
-    private void postPholume() {
-        finish();
-    }
-
     private void setCaptureFragment() {
         if (captureFragment == null) {
-            captureFragment = PholumeCaptureFragment.newInstance(mImageFile, mAudioFile);
+            captureFragment = PholumeCaptureFragment.newInstance(mImageFileName, mAudioFileName);
         }
         setFragment(captureFragment);
     }
 
-    private void setPreviewFragment(int width, int height) {
+    private void setPreviewFragment() {
         if (previewFragment == null) {
-            previewFragment = PholumePreviewFragment.newInstance(mImageFile, mAudioFile, width, height);
+            previewFragment = PholumePreviewFragment.newInstance(mImageFileName, mAudioFileName);
         }
         setFragment(previewFragment);
     }
@@ -83,5 +85,31 @@ public class CaptureActivity extends AppCompatActivity implements OnFragmentInte
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit();
+    }
+
+
+    private void postPholume(String desc) {
+        RequestBody pFile = RequestBody.create(MediaType.parse("multipart/form-data"), mImageFileName);
+        MultipartBody.Part photoBody =
+                MultipartBody.Part.createFormData("photo", mImageFile.getName(), pFile);
+        RequestBody aFile = RequestBody.create(MediaType.parse("multipart/form-data"), mAudioFileName);
+        MultipartBody.Part audioBody =
+                MultipartBody.Part.createFormData("audio", mAudioFile.getName(), aFile);
+        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"), desc);
+        System.out.println("========");
+        System.out.println("photo " + mImageFile.getName() + " " + pFile.toString());
+        System.out.println("audio" + mAudioFile.getName() + " " + aFile.toString());
+        System.out.println("desc " + desc);
+        System.out.println("========");
+//        RestManager.getInstance().postPholume(photoBody, audioBody, description, new PholumeCallback<Pholume>("PostPholume") {
+//            @Override
+//            public void onResponse(Call<Pholume> call, Response<Pholume> response) {
+//                super.onResponse(call, response);
+//                if (response.isSuccessful()) {
+//                    Log.d("UPLOAD SUCCESSFUL", response.body().id);
+//                    finish();
+//                }
+//            }
+//        });
     }
 }

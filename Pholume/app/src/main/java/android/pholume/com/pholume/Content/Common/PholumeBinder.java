@@ -1,7 +1,9 @@
 package android.pholume.com.pholume.Content.Common;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.pholume.com.pholume.Constants;
 import android.pholume.com.pholume.Content.Profile.ProfileActivity;
@@ -16,32 +18,59 @@ import android.pholume.com.pholume.Util;
 import android.pholume.com.pholume.databinding.CardPholumeFeedBinding;
 import android.text.InputType;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.io.File;
 
-import static android.pholume.com.pholume.Content.Common.CommonListActivity.LOG;
-
 public class PholumeBinder {
 
+    private final static String LOG = PholumeBinder.class.getSimpleName();
     private Context context;
+    private Activity mActivity;
     private CardPholumeFeedBinding binding;
     private Pholume pholume;
     private User user;
 
+    private Bitmap image;
     private Drawable heart;
     private Drawable heartFilled;
+    private int MAX_HEIGHT;
 
-    public PholumeBinder(Context context) {
-        this.context = context;
+    private Target target;
+
+    public PholumeBinder(Activity activity) {
+        this.mActivity = activity;
+        this.context = activity;
         heart = context.getDrawable(R.drawable.ic_heart);
         heartFilled = context.getDrawable(R.drawable.ic_heart_filled);
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics metrics = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(metrics);
+        MAX_HEIGHT = (int) Math.round(metrics.widthPixels * 1.3);
+        target = new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                image = bitmap;
+//                resizeImage(bitmap.getWidth(), bitmap.getHeight());
+//                binding.pholumeImage.setImageBitmap(bitmap);
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                binding.pholumeImage.setImageDrawable(errorDrawable);
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                binding.pholumeImage.setImageDrawable(placeHolderDrawable);
+            }
+        };
     }
 
     public void bind(CardPholumeFeedBinding binding,
@@ -52,29 +81,26 @@ public class PholumeBinder {
         this.pholume = pholume;
         this.user = user;
 
+        String url = Constants.BASE_PHOTO + pholume.photoUrl;
+        Picasso.with(context).load(url).into(target);
+
         setupUser();
-        setupPholume();
         setupTitle(false);
         updateLikes();
         updateComments();
         bindListeners(likeCallback);
     }
 
-    public void bind(final CardPholumeFeedBinding binding,
-                     String imageFilePath,
-                     String audioFile,
-                     int imageWidth,
-                     int imageHeight) {
+    public void bind(final CardPholumeFeedBinding binding, String imageFilePath, String audioFile) {
         this.binding = binding;
         this.user = PrefManager.getInstance().getCurrentUser();
 
         binding.likeButton.setVisibility(View.GONE);
         binding.commentButton.setVisibility(View.GONE);
 
-        File imageFile = new File(imageFilePath);
-        resizeImage(imageWidth, imageHeight);
         //get image from file
-        Picasso.with(context).load(imageFile).fit().centerCrop().into(binding.pholumeImage);
+        File imageFile = new File(imageFilePath);
+        Picasso.with(context).load(imageFile).into(target);
 
         //get audio from file
         setupUser();
@@ -94,31 +120,19 @@ public class PholumeBinder {
         binding.pholumeTime.setText(time);
     }
 
-    private void resizeImage(int width, int height) {
-        Log.d(LOG, width + " " + height);
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics metrics = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(metrics);
-        int MAX_HEIGHT = (int) Math.round(metrics.widthPixels * 1.3);
+    private void resizeImage(final int width, final int height) {
         ViewGroup.LayoutParams lp = binding.pholumeImage.getLayoutParams();
         int ratio = width / height;
+        lp.width = width;
         if (ratio < 1) {
-            if (height > MAX_HEIGHT) {
+            if (height >= MAX_HEIGHT) {
                 lp.height = MAX_HEIGHT;
             } else {
                 lp.height = height;
             }
         }
+        System.out.println("HELLO AGAIN : " + lp.width + " " + lp.height);
         binding.pholumeImage.setLayoutParams(lp);
-    }
-
-    private void setupPholume() {
-        String url = Constants.BASE_PHOTO + pholume.photoUrl;
-        //image resizing;
-        resizeImage(pholume.width, pholume.height);
-        //show image
-        Picasso.with(context).load(url).fit().centerCrop().into(binding.pholumeImage);
-
     }
 
     private void bindListeners(final PholumeCallback<Pholume> likeCallback) {

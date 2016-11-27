@@ -1,6 +1,6 @@
 package android.pholume.com.pholume.Content.Feed;
 
-import android.content.Context;
+import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.pholume.com.pholume.Constants;
 import android.pholume.com.pholume.Content.Common.BaseListAdapter;
@@ -43,7 +43,7 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
         }
     }
 
-    FeedListAdapter(Context context, FeedFragment fragment, List<FeedItem> list) {
+    FeedListAdapter(Activity context, FeedFragment fragment, List<FeedItem> list) {
         super(context, list);
         this.fragment = fragment;
         binder = new PholumeBinder(context);

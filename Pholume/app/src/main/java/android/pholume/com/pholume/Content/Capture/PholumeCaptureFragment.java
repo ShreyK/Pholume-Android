@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import static android.pholume.com.pholume.Content.Capture.CaptureActivity.ReturnType.CAPTURE;
 import static android.pholume.com.pholume.Content.Capture.PholumeCameraManager.FlashType.AUTO;
 
 /**
@@ -36,8 +35,6 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
 
     private static String mImageFile;
     private static String mAudioFile;
-    public static int mImageWidth;
-    public static int mImageHeight;
     public static boolean mImageSaved;
     public static boolean mAudioSaved;
     public AutoFitTextureView mTextureView;
@@ -74,9 +71,8 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
         if (mPholumeRecorderManager == null) {
             mPholumeRecorderManager = new PholumeRecorderManager(mActivity, this, mAudioFile);
         }
-
         mImageSaved = false;
-        mAudioSaved = true;
+        mAudioSaved = false;
     }
 
     @Override
@@ -136,7 +132,9 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.capture:
+                setProgressBarVisibile(View.VISIBLE);
                 mPholumeCameraManager.takePicture();
+                mPholumeRecorderManager.startRecording();
                 break;
             case R.id.flash:
                 switch (mPholumeCameraManager.getFlashType()) {
@@ -173,22 +171,9 @@ public class PholumeCaptureFragment extends Fragment implements View.OnClickList
             } else if (TextUtils.isEmpty(mAudioFile)) {
                 Log.e(LOG, "Audio File is empty/null");
             } else {
-                mListener.onFragmentInteraction(CAPTURE);
+                mListener.onFragmentInteraction(CaptureActivity.ReturnType.CAPTURE);
             }
         }
-    }
-
-    public static void setDimensions(int width, int height) {
-        mImageWidth = width;
-        mImageHeight = height;
-    }
-
-    public int getImageWidth() {
-        return mImageWidth;
-    }
-
-    public int getImageHeight() {
-        return mImageHeight;
     }
 
     private void bindViews() {
