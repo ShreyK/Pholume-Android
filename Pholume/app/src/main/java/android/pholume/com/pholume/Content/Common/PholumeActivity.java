@@ -11,6 +11,8 @@ import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.PholumeMediaPlayer;
 import android.pholume.com.pholume.R;
 import android.pholume.com.pholume.databinding.ActivityPholumeBinding;
+import android.pholume.com.pholume.databinding.PholumeViewContainerBinding;
+import android.pholume.com.pholume.databinding.PholumeViewFooterBinding;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,6 +31,8 @@ public class PholumeActivity extends AppCompatActivity {
     private Drawable volumeOn;
 
     ActivityPholumeBinding binding;
+    PholumeViewContainerBinding containerBinding;
+    PholumeViewFooterBinding footerBinding;
     PholumeBinder binder;
     PholumeCallback<Pholume> likeCallback;
 
@@ -37,6 +41,8 @@ public class PholumeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = this;
         binding = DataBindingUtil.setContentView(this, R.layout.activity_pholume);
+        containerBinding = binding.pholumeView.pholumeContainer;
+        footerBinding = binding.pholumeView.pholumeFooter;
         binder = new PholumeBinder(this);
 
         volumeOff = getDrawable(R.drawable.ic_volume_off);
@@ -52,8 +58,8 @@ public class PholumeActivity extends AppCompatActivity {
                 super.onResponse(call, response);
                 if (response.isSuccessful()) {
                     binder.updatePholume(response.body());
-                    binder.updateLikes();
-                    binder.updateLikeImage();
+                    binder.updateLikes(footerBinding);
+                    binder.updateLikeImage(footerBinding);
                 } else {
                     Snackbar.make(binding.getRoot(),
                             response.code() + ": " + response.message(),
@@ -63,18 +69,18 @@ public class PholumeActivity extends AppCompatActivity {
                 }
             }
         };
-        binder.bind(binding.image, binding.pholumeTitle, pholume, user, likeCallback);
+        binder.bind(containerBinding, footerBinding, pholume, user, likeCallback);
 
         //set image listener
-        binding.image.setOnClickListener(new View.OnClickListener() {
+        containerBinding.pholumeImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                         mediaPlayer.stop();
-                        binding.volumeImage.setImageDrawable(volumeOff);
+                        containerBinding.volumeImage.setImageDrawable(volumeOff);
                     } else {
-                        binding.volumeImage.setImageDrawable(volumeOn);
+                        containerBinding.volumeImage.setImageDrawable(volumeOn);
                         mediaPlayer = PholumeMediaPlayer.create(context,
                                 Constants.BASE_AUDIO + pholume.audioUrl);
                     }

@@ -104,7 +104,7 @@ public class PholumePreviewFragment extends Fragment {
 
     private void bindViews() {
         if (mBinder == null) mBinder = new PholumeBinder(getActivity());
-        mBinder.bind(mBinding.image, mBinding.title, mPholume);
+        mBinder.bind(mBinding.pholumeViewContainer, mBinding.title, mPholume);
     }
 
     private void bindListeners() {
@@ -115,19 +115,19 @@ public class PholumePreviewFragment extends Fragment {
             }
         });
 
-        mBinding.image.setOnClickListener(new View.OnClickListener() {
+        mBinding.pholumeViewContainer.pholumeImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     FileInputStream is = new FileInputStream(mAudioFile);
                     if (mMediaPlayer == null) {
                         mMediaPlayer = PholumeMediaPlayer.create(mContext, is.getFD());
-                        mBinding.volumeImage.setImageDrawable(
+                        mBinding.pholumeViewContainer.volumeImage.setImageDrawable(
                                 getContext().getDrawable(R.drawable.ic_volume_on));
                     } else if (mMediaPlayer.isPlaying()) {
                         mMediaPlayer.stop();
                         mMediaPlayer = null;
-                        mBinding.volumeImage.setImageDrawable(
+                        mBinding.pholumeViewContainer.volumeImage.setImageDrawable(
                                 getContext().getDrawable(R.drawable.ic_volume_off));
                     }
                 } catch (Exception e) {

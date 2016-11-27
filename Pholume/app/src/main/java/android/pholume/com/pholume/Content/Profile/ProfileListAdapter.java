@@ -18,6 +18,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import static android.support.v7.widget.RecyclerView.NO_POSITION;
+
 class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, Pholume> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -48,13 +50,14 @@ class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, 
         binding.getRoot().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(context == null) return;
+                if (context == null) return;
                 Intent intent = new Intent(context, PholumeActivity.class);
-                intent.putExtra("pholume",list.get(holder.getAdapterPosition()));
+                if (holder.getAdapterPosition() == NO_POSITION) return;
+                intent.putExtra("pholume", list.get(holder.getAdapterPosition()));
                 User user;
-                try{
+                try {
                     user = PrefManager.getInstance().getCurrentUser();
-                }catch(NullPointerException e){
+                } catch (NullPointerException e) {
                     user = null;
                 }
                 intent.putExtra("user", user);
