@@ -7,7 +7,6 @@ import android.pholume.com.pholume.Content.Common.BaseListAdapter;
 import android.pholume.com.pholume.Content.Common.PholumeActivity;
 import android.pholume.com.pholume.Model.Pholume;
 import android.pholume.com.pholume.Model.User;
-import android.pholume.com.pholume.PrefManager;
 import android.pholume.com.pholume.databinding.CardPholumeProfileBinding;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -16,9 +15,16 @@ import android.view.ViewGroup;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static android.pholume.com.pholume.Content.Common.PholumeActivity.LIST_EXTRA;
+import static android.pholume.com.pholume.Content.Common.PholumeActivity.POSITION_EXTRA;
+import static android.support.v7.widget.RecyclerView.NO_POSITION;
+
 class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, Pholume> {
+
+    private User mUser;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -30,8 +36,9 @@ class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, 
         }
     }
 
-    ProfileListAdapter(Context context, List<Pholume> list) {
+    ProfileListAdapter(Context context, List<Pholume> list, User user) {
         super(context, list);
+        this.mUser = user;
     }
 
     @Override
@@ -45,22 +52,22 @@ class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, 
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Pholume pholume = list.get(position);
         CardPholumeProfileBinding binding = holder.binding;
+        Picasso.with(context)
+                .load(Constants.BASE_PHOTO + pholume.photoUrl)
+                .fit().centerCrop()
+                .into(binding.pholumeImage);
         binding.getRoot().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(context == null) return;
+                if (context == null) return;
+                int pos = holder.getAdapterPosition();
+                if (pos == NO_POSITION) return;
                 Intent intent = new Intent(context, PholumeActivity.class);
-                intent.putExtra("pholume",list.get(holder.getAdapterPosition()));
-                User user;
-                try{
-                    user = PrefManager.getInstance().getCurrentUser();
-                }catch(NullPointerException e){
-                    user = null;
-                }
-                intent.putExtra("user", user);
+                intent.putParcelableArrayListExtra(LIST_EXTRA, new ArrayList<>(list));
+                intent.putExtra(POSITION_EXTRA, pos);
+                intent.putExtra(PholumeActivity.USER_EXTRA, mUser);
                 context.startActivity(intent);
             }
         });
-        Picasso.with(context).load(Constants.BASE_PHOTO + pholume.photoUrl).fit().centerCrop().into(binding.pholumeImage);
     }
 }

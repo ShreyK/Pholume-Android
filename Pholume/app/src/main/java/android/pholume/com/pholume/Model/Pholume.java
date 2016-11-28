@@ -18,9 +18,14 @@ public class Pholume implements Parcelable {
     @SerializedName("_id")
     public String id;
 
+    @SerializedName("uid")
     public String uid;
 
+    @SerializedName("description")
     public String description;
+
+    @SerializedName("numComments")
+    public int numComments;
 
     @SerializedName("date_created")
     public Date dateCreated;
@@ -34,22 +39,14 @@ public class Pholume implements Parcelable {
     @SerializedName("audio")
     public String audioUrl;
 
+    @SerializedName("width")
     public int width;
 
+    @SerializedName("height")
     public int height;
 
-    public int numComments;
-
+    @SerializedName("likes")
     public HashSet<String> likes;
-
-    public Pholume(String id, String uid, String description, String photoUrl, String audioUrl, HashSet<String> likes) {
-        this.id = id;
-        this.uid = uid;
-        this.description = description;
-        this.photoUrl = photoUrl;
-        this.audioUrl = audioUrl;
-        this.likes = likes;
-    }
 
     Pholume(Parcel parcel) {
         Bundle bundle = parcel.readBundle(getClass().getClassLoader());

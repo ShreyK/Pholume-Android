@@ -1,6 +1,6 @@
 package android.pholume.com.pholume.Content.Feed;
 
-import android.content.Context;
+import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.pholume.com.pholume.Constants;
 import android.pholume.com.pholume.Content.Common.BaseListAdapter;
@@ -10,7 +10,9 @@ import android.pholume.com.pholume.Model.Pholume;
 import android.pholume.com.pholume.Model.User;
 import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.R;
-import android.pholume.com.pholume.databinding.CardPholumeFeedBinding;
+import android.pholume.com.pholume.databinding.PholumeViewBinding;
+import android.pholume.com.pholume.databinding.PholumeViewContainerBinding;
+import android.pholume.com.pholume.databinding.PholumeViewFooterBinding;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,17 +35,17 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        CardPholumeFeedBinding binding;
+        PholumeViewBinding binding;
         boolean hasLiked;
 
-        ViewHolder(CardPholumeFeedBinding binding) {
+        ViewHolder(PholumeViewBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
             hasLiked = false;
         }
     }
 
-    FeedListAdapter(Context context, FeedFragment fragment, List<FeedItem> list) {
+    FeedListAdapter(Activity context, FeedFragment fragment, List<FeedItem> list) {
         super(context, list);
         this.fragment = fragment;
         binder = new PholumeBinder(context);
@@ -53,7 +55,7 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        CardPholumeFeedBinding binding = CardPholumeFeedBinding.inflate(LayoutInflater.from(context)
+        PholumeViewBinding binding = PholumeViewBinding.inflate(LayoutInflater.from(context)
                 , parent, false);
         return new ViewHolder(binding);
     }
@@ -63,7 +65,8 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
         final FeedItem feedItem = list.get(position);
         final Pholume pholume = feedItem.pholume;
         final User user = feedItem.user;
-        final CardPholumeFeedBinding binding = holder.binding;
+        final PholumeViewContainerBinding containerBinding = holder.binding.pholumeContainer;
+        final PholumeViewFooterBinding footerBinding = holder.binding.pholumeFooter;
 
         final PholumeCallback<Pholume> likeCallback = new PholumeCallback<Pholume>("Like") {
             @Override
@@ -80,11 +83,11 @@ class FeedListAdapter extends BaseListAdapter<FeedListAdapter.ViewHolder, FeedIt
                 }
             }
         };
-        binding.volumeImage.setVisibility(View.GONE);
-        binder.bind(binding, pholume, user, likeCallback);
+        containerBinding.volumeImage.setVisibility(View.GONE);
+        binder.bind(containerBinding, footerBinding, pholume, user, likeCallback);
 
         //set image listener
-        binding.pholumeImage.setOnClickListener(new View.OnClickListener() {
+        containerBinding.pholumeImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String audioUrl = Constants.BASE_AUDIO + pholume.audioUrl;

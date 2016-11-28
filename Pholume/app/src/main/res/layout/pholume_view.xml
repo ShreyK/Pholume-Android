@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/pholume_container"
+            layout="@layout/pholume_view_container"/>
+
+        <include
+            android:id="@+id/pholume_footer"
+            layout="@layout/pholume_view_footer" />
+
+    </LinearLayout>
+</layout>

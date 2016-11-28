@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.pholume.com.pholume.Content.Camera;
+package android.pholume.com.pholume.Content.Capture;
 
 import android.content.Context;
 import android.util.AttributeSet;

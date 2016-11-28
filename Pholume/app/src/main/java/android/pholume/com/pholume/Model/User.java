@@ -11,32 +11,26 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class User implements Parcelable {
+
     @SerializedName("_id")
     public String id;
+
+    @SerializedName("email")
     public String email;
+
+    @SerializedName("username")
     public String username;
+
+    @SerializedName("following")
     public HashSet<String> following;
+
+    @SerializedName("followers")
     public HashSet<String> followers;
+
+    @SerializedName("avatar")
     public String avatar;
 
-    User(String id, String email, String username, HashSet<String> following, HashSet<String> followers, String avatar) {
-        this.id = id;
-        this.email = email;
-        this.username = username;
-        this.avatar = avatar;
-        if (following == null) {
-            this.following = new HashSet<>();
-        } else {
-            this.following = following;
-        }
-        if (followers == null) {
-            this.followers = new HashSet<>();
-        } else {
-            this.followers = followers;
-        }
-    }
-
-    User(Parcel parcel) {
+    private User(Parcel parcel) {
         Bundle bundle = parcel.readBundle(getClass().getClassLoader());
         this.id = bundle.getString("id");
         this.email = bundle.getString("email");
@@ -77,18 +71,21 @@ public class User implements Parcelable {
         }
     };
 
-    public String getNumOfFollowers(){
+    public String getNumOfFollowers() {
         return String.valueOf(followers.size());
     }
-    public String getNumOfFollowing(){
+
+    public String getNumOfFollowing() {
         return String.valueOf(following.size());
     }
 
-    public boolean isFollowing(String uID){
+    public boolean isFollowing(String uID) {
+        if (following == null) following = new HashSet<>();
         return following.contains(uID);
     }
 
-    public boolean hasFollower(String uID){
+    public boolean hasFollower(String uID) {
+        if (followers == null) followers = new HashSet<>();
         return followers.contains(uID);
     }
 

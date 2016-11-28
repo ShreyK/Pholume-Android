@@ -1,15 +1,19 @@
 package android.pholume.com.pholume;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.Log;
 
+import java.io.FileDescriptor;
+import java.io.IOException;
+
 public class PholumeMediaPlayer {
     private static final String TAG = PholumeMediaPlayer.class.getSimpleName();
 
-    private String mUriString;
     private Context mContext = null;
+    private FileDescriptor mFileDescriptor = null;
     private Uri mUri = null;
     private int mCounter = 1;
 
@@ -20,9 +24,12 @@ public class PholumeMediaPlayer {
         return new PholumeMediaPlayer(context, url);
     }
 
+    public static PholumeMediaPlayer create(Context context, FileDescriptor url) {
+        return new PholumeMediaPlayer(context, url);
+    }
+
     private PholumeMediaPlayer(Context context, String url) {
         mContext = context;
-        mUriString = url;
         mUri = Uri.parse(url);
 
         mCurrentPlayer = MediaPlayer.create(mContext, mUri);
@@ -35,14 +42,47 @@ public class PholumeMediaPlayer {
         setNextPlayer();
     }
 
-    public boolean equalsUrl(String url){
-        return mUriString.equals(url);
+    private PholumeMediaPlayer(Context context, FileDescriptor fileDescriptor) {
+        mContext = context;
+        mFileDescriptor = fileDescriptor;
+        try {
+            mCurrentPlayer = new MediaPlayer();
+            mCurrentPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mCurrentPlayer.setDataSource(fileDescriptor);
+            mCurrentPlayer.prepareAsync();
+            mCurrentPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mediaPlayer) {
+                    mCurrentPlayer.start();
+                }
+            });
+            setNextPlayer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setNextPlayer() {
-        mNextPlayer = MediaPlayer.create(mContext, mUri);
-        mCurrentPlayer.setNextMediaPlayer(mNextPlayer);
-        mCurrentPlayer.setOnCompletionListener(onCompletionListener);
+        try {
+            if (mFileDescriptor != null) {
+                mNextPlayer = new MediaPlayer();
+                mNextPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mNextPlayer.setDataSource(mFileDescriptor);
+                mNextPlayer.prepareAsync();
+                mNextPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        mCurrentPlayer.setNextMediaPlayer(mNextPlayer);
+                    }
+                });
+            } else {
+                mNextPlayer = MediaPlayer.create(mContext, mUri);
+                mCurrentPlayer.setNextMediaPlayer(mNextPlayer);
+            }
+            mCurrentPlayer.setOnCompletionListener(onCompletionListener);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private final MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
@@ -70,14 +110,14 @@ public class PholumeMediaPlayer {
     }
 
     public void stop() throws IllegalStateException {
-        if(mCurrentPlayer != null && mCurrentPlayer.isPlaying()){
+        if (mCurrentPlayer != null && mCurrentPlayer.isPlaying()) {
             mCurrentPlayer.stop();
         }
         reset();
     }
 
     public void destroy() throws IllegalStateException {
-        if(mCurrentPlayer != null && mCurrentPlayer.isPlaying()){
+        if (mCurrentPlayer != null && mCurrentPlayer.isPlaying()) {
             mCurrentPlayer.stop();
         }
         release();

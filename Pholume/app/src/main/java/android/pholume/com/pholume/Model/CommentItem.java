@@ -11,11 +11,6 @@ public class CommentItem implements Parcelable {
 
     public Comment comment;
 
-    CommentItem(User user, Comment comment) {
-        this.user = user;
-        this.comment = comment;
-    }
-
     CommentItem(Parcel parcel) {
         Bundle bundle = parcel.readBundle(getClass().getClassLoader());
         this.user = bundle.getParcelable("user");

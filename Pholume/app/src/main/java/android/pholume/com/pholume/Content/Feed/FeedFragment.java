@@ -3,6 +3,8 @@ package android.pholume.com.pholume.Content.Feed;
 import android.content.Context;
 import android.os.Bundle;
 import android.pholume.com.pholume.Model.FeedItem;
+import android.pholume.com.pholume.Model.Pholume;
+import android.pholume.com.pholume.Model.User;
 import android.pholume.com.pholume.Network.PholumeCallback;
 import android.pholume.com.pholume.Network.RestManager;
 import android.pholume.com.pholume.PholumeMediaPlayer;
@@ -23,10 +25,14 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import static android.pholume.com.pholume.Content.Common.CommonListActivity.LOG;
 
 public class FeedFragment extends Fragment {
 
+    private final static String LOG = FeedFragment.class.getSimpleName();
+    public final static String IS_PROFILE_EXTRA = "IS_PROFILE_EXTRA";
+    public final static String PHOLUMES_EXTRA = "PHOLUMES_EXTRA";
+    public final static String POSITON_EXTRA = "POSITON_EXTRA";
+    public final static String USER_EXTRA = "USER_EXTRA";
     private Context context;
     private View rootView;
     private SwipeRefreshLayout refreshLayout;
@@ -34,9 +40,28 @@ public class FeedFragment extends Fragment {
 
     private FeedListAdapter adapter;
     private ArrayList<FeedItem> pholumeList;
+    private ArrayList<Pholume> mPholumes;
 
     public static PholumeMediaPlayer mediaPlayer;
     private static String audioUrl;
+
+    private User mUser;
+    private boolean isProfileFeed;
+    private int mPositon;
+
+    public static FeedFragment newInstance(User user,
+                                           ArrayList<Pholume> pholumes,
+                                           int position,
+                                           boolean isProfileFeed) {
+        FeedFragment fragment = new FeedFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(IS_PROFILE_EXTRA, isProfileFeed);
+        args.putParcelableArrayList(PHOLUMES_EXTRA, pholumes);
+        args.putInt(POSITON_EXTRA, position);
+        args.putParcelable(USER_EXTRA, user);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onResume() {
@@ -46,9 +71,9 @@ public class FeedFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        try{
+        try {
             mediaPlayer.destroy();
-        } catch(Exception e){
+        } catch (Exception e) {
             Log.e(LOG, "Couldnt stop MediaPlayer onPause");
         }
         mediaPlayer = null;
@@ -56,31 +81,45 @@ public class FeedFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Bundle args = getArguments();
         context = getContext();
+        pholumeList = new ArrayList<>();
         rootView = inflater.inflate(R.layout.fragment_feed, container, false);
+
+        if (args != null) {
+            mUser = args.getParcelable(USER_EXTRA);
+            mPholumes = args.getParcelableArrayList(PHOLUMES_EXTRA);
+            isProfileFeed = args.getBoolean(IS_PROFILE_EXTRA);
+            mPositon = args.getInt(POSITON_EXTRA);
+            setPholumeList();
+        } else {
+            fetch();
+            mPositon = -1;
+        }
+
         refreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh_layout);
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                fetchFeed();
+                fetch();
             }
         });
-        pholumeList = new ArrayList<>();
         adapter = new FeedListAdapter(getActivity(), this, pholumeList);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
-        fetchFeed();
+        if (mPositon != -1) {
+            recyclerView.scrollToPosition(mPositon);
+        }
 
         return rootView;
     }
 
-    public void playAudio(String url){
+    public void playAudio(String url) {
         try {
-            if(FeedFragment.mediaPlayer != null && FeedFragment.mediaPlayer.isPlaying()){
-                if(audioUrl.equals(url)){
+            if (FeedFragment.mediaPlayer != null && FeedFragment.mediaPlayer.isPlaying()) {
+                if (audioUrl.equals(url)) {
                     mediaPlayer.stop();
                 } else {
                     mediaPlayer.destroy();
@@ -93,6 +132,23 @@ public class FeedFragment extends Fragment {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void setPholumeList() {
+        if (mPholumes == null) mPholumes = new ArrayList<>();
+        if (pholumeList == null) pholumeList = new ArrayList<>();
+        pholumeList.clear();
+        for (Pholume p : mPholumes) {
+            pholumeList.add(new FeedItem(mUser, p));
+        }
+    }
+
+    private void fetch() {
+        if (isProfileFeed) {
+            fetchUserPholumes();
+        } else {
+            fetchFeed();
         }
     }
 
@@ -112,6 +168,29 @@ public class FeedFragment extends Fragment {
                             .show();
                     Log.e("getFeed", response.message());
                 }
+            }
+        });
+    }
+
+    private void fetchUserPholumes() {
+        if (mUser == null) return;
+        RestManager.getInstance().getPholumes(mUser.id, new PholumeCallback<List<Pholume>>("GetPholumes") {
+            @Override
+            public void onResponse(Call<List<Pholume>> call, Response<List<Pholume>> response) {
+                super.onResponse(call, response);
+                refreshLayout.setRefreshing(false);
+                if (response.isSuccessful()) {
+                    mPholumes = new ArrayList<>(response.body());
+                    setPholumeList();
+                    adapter.setData(pholumeList);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Pholume>> call, Throwable t) {
+                super.onFailure(call, t);
+                refreshLayout.setRefreshing(false);
             }
         });
     }

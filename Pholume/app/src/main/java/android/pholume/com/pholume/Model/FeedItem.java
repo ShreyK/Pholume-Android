@@ -5,24 +5,24 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class FeedItem implements Parcelable{
+public class FeedItem implements Parcelable {
 
     public User user;
 
     public Pholume pholume;
 
-    FeedItem(User user, Pholume pholume){
+    public FeedItem(User user, Pholume pholume) {
         this.user = user;
         this.pholume = pholume;
     }
 
-    FeedItem(Parcel parcel) {
-        Bundle bundle = parcel.readBundle();
+    private FeedItem(Parcel parcel) {
+        Bundle bundle = parcel.readBundle(getClass().getClassLoader());
         this.user = bundle.getParcelable("user");
         this.pholume = bundle.getParcelable("pholume");
     }
 
-    public void print(){
+    public void print() {
         Log.d("FEED ITEM", "User: " + user.id + ", Pholume: " + pholume.id);
     }
 

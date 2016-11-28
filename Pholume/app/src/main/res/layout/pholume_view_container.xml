@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/pholume_image"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:src="@color/black" />
+
+        <ImageView
+            android:id="@+id/volume_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/pholume_image"
+            android:layout_alignParentEnd="true"
+            android:padding="16dp"
+            android:src="@drawable/ic_volume_off"
+            android:tint="@color/white" />
+    </RelativeLayout>
+</layout>

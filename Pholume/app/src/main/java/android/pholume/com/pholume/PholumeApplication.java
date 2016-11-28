@@ -19,5 +19,6 @@ public class PholumeApplication extends Application {
         // Initialize Fabric with the debug-disabled crashlytics.
         Fabric.with(this, crashlyticsKit);
         PrefManager.getInstance(this);
+        Util.setupRootDirs();
     }
 }

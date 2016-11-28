@@ -22,6 +22,7 @@ import static android.pholume.com.pholume.Content.Common.CommonListActivity.COMM
 public class CommonListAdapter<T> extends BaseListAdapter<CommonListAdapter.ViewHolder, T> {
 
     private final String type;
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         LayoutCommonListItemBinding binding;
 
@@ -46,15 +47,15 @@ public class CommonListAdapter<T> extends BaseListAdapter<CommonListAdapter.View
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         LayoutCommonListItemBinding binding = holder.binding;
-        if(type.equals(COMMENTS)) {
+        if (type.equals(COMMENTS)) {
             bindComment((CommentItem) list.get(position), binding);
         } else {
-            bindUser((User)list.get(position), binding);
+            bindUser((User) list.get(position), binding);
         }
     }
 
 
-    public void bindComment(final CommentItem comment, LayoutCommonListItemBinding binding){
+    public void bindComment(final CommentItem comment, LayoutCommonListItemBinding binding) {
         String url = Constants.BASE_AVATAR + comment.user.avatar;
         Picasso.with(context)
                 .load(url)
@@ -74,7 +75,7 @@ public class CommonListAdapter<T> extends BaseListAdapter<CommonListAdapter.View
         });
     }
 
-    public void bindUser(final User user, LayoutCommonListItemBinding binding){
+    public void bindUser(final User user, LayoutCommonListItemBinding binding) {
         String avatarUrl = Constants.BASE_AVATAR + user.avatar;
         Picasso.with(context)
                 .load(avatarUrl)
