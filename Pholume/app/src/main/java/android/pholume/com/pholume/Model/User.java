@@ -9,7 +9,6 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 public class User implements Parcelable {
 
@@ -38,6 +37,7 @@ public class User implements Parcelable {
         this.username = bundle.getString("username");
         this.following = new HashSet<>(bundle.getStringArrayList("following"));
         this.followers = new HashSet<>(bundle.getStringArrayList("followers"));
+        this.avatar = bundle.getString("avatar");
     }
 
     public void print() {

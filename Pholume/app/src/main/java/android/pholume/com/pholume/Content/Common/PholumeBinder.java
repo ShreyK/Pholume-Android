@@ -66,7 +66,7 @@ public class PholumeBinder {
         setupTitle(footerBinding, footerBinding.pholumeTitle);
         updateLikes(footerBinding);
         updateComments(footerBinding);
-        bindListeners(footerBinding, likeCallback, pholume);
+        bindListeners(footerBinding, likeCallback, pholume, user);
     }
 
     public void bind(final PholumeViewContainerBinding binding,
@@ -117,7 +117,8 @@ public class PholumeBinder {
 
     private void bindListeners(final PholumeViewFooterBinding binding,
                                final PholumeCallback<Pholume> likeCallback,
-                               final Pholume pholume) {
+                               final Pholume pholume,
+                               final User user) {
         binding.likeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -131,6 +132,14 @@ public class PholumeBinder {
                 Intent intent = new Intent(context, CommonListActivity.class);
                 intent.putExtra(CommonListActivity.TYPE_EXTRA, CommonListActivity.COMMENTS);
                 intent.putExtra(CommonListActivity.PHOLUME_EXTRA, pholume);
+                context.startActivity(intent);
+            }
+        });
+        binding.getRoot().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, ProfileActivity.class);
+                intent.putExtra("user", user);
                 context.startActivity(intent);
             }
         });
@@ -154,19 +163,7 @@ public class PholumeBinder {
             textView.setInputType(InputType.TYPE_NULL);
             textView.setText(pholume.description);
             textView.setGravity(Gravity.CENTER_HORIZONTAL);
-            binding.getRoot().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    startUserActivity();
-                }
-            });
         }
-    }
-
-    private void startUserActivity() {
-        Intent intent = new Intent(context, ProfileActivity.class);
-        intent.putExtra("user", user);
-        context.startActivity(intent);
     }
 
     public void updatePholume(Pholume pholume) {

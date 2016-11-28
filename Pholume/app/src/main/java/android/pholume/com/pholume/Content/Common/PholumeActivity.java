@@ -12,8 +12,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-import static android.pholume.com.pholume.Content.Feed.FeedFragment.mediaPlayer;
-
 public class PholumeActivity extends AppCompatActivity {
 
     private static final String LOG = PholumeActivity.class.getSimpleName();
@@ -22,7 +20,7 @@ public class PholumeActivity extends AppCompatActivity {
     public static final String LIST_EXTRA = "LIST";
     public static final String POSITION_EXTRA = "POSITION";
 
-    private Context context;
+    private Context mContext;
     private FeedFragment fragment;
 
     private ArrayList<Pholume> pholumes;
@@ -32,8 +30,8 @@ public class PholumeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = this;
         setContentView(R.layout.activity_pholume);
+        mContext = this;
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -41,34 +39,18 @@ public class PholumeActivity extends AppCompatActivity {
             position = bundle.getInt(POSITION_EXTRA, 0);
             user = bundle.getParcelable(USER_EXTRA);
         } else {
-            Log.e(LOG, "No bundle parsed");
+            Log.e(LOG, "No bundle passed");
             return;
         }
         if (fragment == null) {
-            fragment = FeedFragment.newInstance(user, pholumes, true);
+            fragment = FeedFragment.newInstance(user, pholumes, position, true);
         }
         setFragment(fragment);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        try {
-            mediaPlayer.destroy();
-        } catch (Exception e) {
-            Log.e(LOG, "Couldnt stop MediaPlayer onPause");
-        }
-        mediaPlayer = null;
-    }
-
     private void setFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.frame, fragment)
+                .replace(R.id.container, fragment)
                 .commit();
     }
 

@@ -20,7 +20,6 @@ import java.util.List;
 
 import static android.pholume.com.pholume.Content.Common.PholumeActivity.LIST_EXTRA;
 import static android.pholume.com.pholume.Content.Common.PholumeActivity.POSITION_EXTRA;
-import static android.pholume.com.pholume.Content.Feed.FeedFragment.USER_EXTRA;
 import static android.support.v7.widget.RecyclerView.NO_POSITION;
 
 class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, Pholume> {
@@ -53,18 +52,22 @@ class ProfileListAdapter extends BaseListAdapter<ProfileListAdapter.ViewHolder, 
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Pholume pholume = list.get(position);
         CardPholumeProfileBinding binding = holder.binding;
+        Picasso.with(context)
+                .load(Constants.BASE_PHOTO + pholume.photoUrl)
+                .fit().centerCrop()
+                .into(binding.pholumeImage);
         binding.getRoot().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (context == null) return;
+                int pos = holder.getAdapterPosition();
+                if (pos == NO_POSITION) return;
                 Intent intent = new Intent(context, PholumeActivity.class);
-                if (holder.getAdapterPosition() == NO_POSITION) return;
                 intent.putParcelableArrayListExtra(LIST_EXTRA, new ArrayList<>(list));
-                intent.putExtra(POSITION_EXTRA, holder.getAdapterPosition());
-                intent.putExtra(USER_EXTRA, mUser);
+                intent.putExtra(POSITION_EXTRA, pos);
+                intent.putExtra(PholumeActivity.USER_EXTRA, mUser);
                 context.startActivity(intent);
             }
         });
-        Picasso.with(context).load(Constants.BASE_PHOTO + pholume.photoUrl).fit().centerCrop().into(binding.pholumeImage);
     }
 }

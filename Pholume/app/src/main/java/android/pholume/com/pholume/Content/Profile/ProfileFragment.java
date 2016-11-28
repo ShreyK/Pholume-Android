@@ -261,7 +261,7 @@ public class ProfileFragment extends Fragment {
         binding.followersValue.setText(user.getNumOfFollowers());
         binding.followingValue.setText(user.getNumOfFollowing());
 
-        if (user.avatar != null && !user.avatar.isEmpty()) bindAvatar(user);
+        bindAvatar(user);
 
         binding.profileButton.setText(buttonText);
         binding.profileButton.setBackgroundResource(BUTTON_COLOR_R);
@@ -276,6 +276,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void bindAvatar(User user) {
+        if (user.avatar == null || user.avatar.isEmpty()) return;
         if (PrefManager.getInstance().getCurrentUser().id.equals(user.id)) {
             PrefManager.getInstance().saveCurrentUser(user);
         }

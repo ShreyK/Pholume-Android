@@ -31,6 +31,7 @@ public class FeedFragment extends Fragment {
     private final static String LOG = FeedFragment.class.getSimpleName();
     public final static String IS_PROFILE_EXTRA = "IS_PROFILE_EXTRA";
     public final static String PHOLUMES_EXTRA = "PHOLUMES_EXTRA";
+    public final static String POSITON_EXTRA = "POSITON_EXTRA";
     public final static String USER_EXTRA = "USER_EXTRA";
     private Context context;
     private View rootView;
@@ -46,12 +47,17 @@ public class FeedFragment extends Fragment {
 
     private User mUser;
     private boolean isProfileFeed;
+    private int mPositon;
 
-    public static FeedFragment newInstance(User user, ArrayList<Pholume> pholumes, boolean isProfileFeed) {
+    public static FeedFragment newInstance(User user,
+                                           ArrayList<Pholume> pholumes,
+                                           int position,
+                                           boolean isProfileFeed) {
         FeedFragment fragment = new FeedFragment();
         Bundle args = new Bundle();
         args.putBoolean(IS_PROFILE_EXTRA, isProfileFeed);
         args.putParcelableArrayList(PHOLUMES_EXTRA, pholumes);
+        args.putInt(POSITON_EXTRA, position);
         args.putParcelable(USER_EXTRA, user);
         fragment.setArguments(args);
         return fragment;
@@ -76,15 +82,21 @@ public class FeedFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Bundle args = getArguments();
+        context = getContext();
+        pholumeList = new ArrayList<>();
+        rootView = inflater.inflate(R.layout.fragment_feed, container, false);
+
         if (args != null) {
             mUser = args.getParcelable(USER_EXTRA);
             mPholumes = args.getParcelableArrayList(PHOLUMES_EXTRA);
             isProfileFeed = args.getBoolean(IS_PROFILE_EXTRA);
+            mPositon = args.getInt(POSITON_EXTRA);
             setPholumeList();
+        } else {
+            fetch();
+            mPositon = -1;
         }
 
-        context = getContext();
-        rootView = inflater.inflate(R.layout.fragment_feed, container, false);
         refreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh_layout);
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -92,14 +104,14 @@ public class FeedFragment extends Fragment {
                 fetch();
             }
         });
-        pholumeList = new ArrayList<>();
         adapter = new FeedListAdapter(getActivity(), this, pholumeList);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
-        fetch();
+        if (mPositon != -1) {
+            recyclerView.scrollToPosition(mPositon);
+        }
 
         return rootView;
     }
@@ -120,6 +132,15 @@ public class FeedFragment extends Fragment {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void setPholumeList() {
+        if (mPholumes == null) mPholumes = new ArrayList<>();
+        if (pholumeList == null) pholumeList = new ArrayList<>();
+        pholumeList.clear();
+        for (Pholume p : mPholumes) {
+            pholumeList.add(new FeedItem(mUser, p));
         }
     }
 
@@ -149,15 +170,6 @@ public class FeedFragment extends Fragment {
                 }
             }
         });
-    }
-
-    private void setPholumeList() {
-        if (mPholumes == null) mPholumes = new ArrayList<>();
-        if (pholumeList == null) pholumeList = new ArrayList<>();
-        pholumeList.clear();
-        for (Pholume p : mPholumes) {
-            pholumeList.add(new FeedItem(mUser, p));
-        }
     }
 
     private void fetchUserPholumes() {
